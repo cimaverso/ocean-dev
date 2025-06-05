@@ -469,7 +469,7 @@ class RegistroService:
             'fecha_entrada': registro.reg_fechaentrada.strftime('%d/%b/%Y'),
             'hora_entrada': registro.reg_horaentrada.strftime('%H:%M'),
             'fecha_salida': registro.reg_fechaentrada.strftime('%d/%b/%Y'),
-            'hora_salida': registro.reg_horaentrada.strftime('%H:%M'),
+            'hora_salida': registro.reg_horasalida.strftime('%H:%M'),
             'vehiculo': registro.vehiculo.vehi_placa if registro.vehiculo else '',
             'trailer': registro.trailer.trai_placa if registro.trailer else '',
             'conductor': registro.conductor.conduct_nombre if registro.conductor else '',
