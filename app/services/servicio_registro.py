@@ -519,7 +519,6 @@ class RegistroService:
       
         return pdf
     
-
     def calcular_ingresos(self):
         statement = select(Registro).where(Registro.reg_estado == 1)
         registros = self.db.exec(statement).all()
