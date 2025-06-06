@@ -40,7 +40,7 @@ def crear_trailer(trailer: TrailerCreate, db: Session = Depends(get_db), usuario
     if not nuevo_trailer:
         raise HTTPException(status_code=400, detail="Error al crear el trailer")
 
-    return {"message": "Trailer creado exitosamente."}
+    return nuevo_trailer
 
 # Actualizar trailer
 @router.put("/{id}", status_code=status.HTTP_200_OK)
