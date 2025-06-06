@@ -200,6 +200,7 @@ class RegistroService:
         data = [
             {
                 'Registro': ingreso.reg_consecutivo,
+                'Tiquete': ingreso.reg_tiquete,
                 'Tipo': ingreso.tipo.tr_nombre,
                 'Facturado': ingreso.factura.fac_fecha if ingreso.factura else None,
                 'Origen': ingreso.origen.ori_nombre if ingreso.origen else None,
@@ -293,6 +294,7 @@ class RegistroService:
         data = [
             {
                 'Registro': despacho.reg_consecutivo,
+                'Tiquete': despacho.reg_tiquete,
                 'Tipo': despacho.tipo.tr_nombre,
                 'Fecha Entrada': despacho.reg_fechaentrada.strftime("%Y-%m-%d") if despacho.reg_fechaentrada else '',
                 'Hora Entrada': despacho.reg_horaentrada.strftime("%I:%M %p") if despacho.reg_horaentrada else '',
@@ -388,6 +390,7 @@ class RegistroService:
         data = [
             {
                 'Registro': servicio.reg_consecutivo,
+                'Tiquete': servicio.reg_tiquete,
                 'Tipo': servicio.tipo.tr_nombre,
                 'Fecha Entrada': servicio.reg_fechaentrada.strftime("%Y-%m-%d") if servicio.reg_fechaentrada else '',
                 'Hora Entrada': servicio.reg_horaentrada.strftime("%I:%M %p") if servicio.reg_horaentrada else '',
