@@ -199,8 +199,8 @@ class RegistroService:
 
         data = [
             {
-                'Registro': ingreso.reg_consecutivo,
                 'Tiquete': ingreso.reg_tiquete,
+                'Registro': ingreso.reg_consecutivo,
                 'Tipo': ingreso.tipo.tr_nombre,
                 'Facturado': ingreso.factura.fac_fecha if ingreso.factura else None,
                 'Origen': ingreso.origen.ori_nombre if ingreso.origen else None,
@@ -293,8 +293,8 @@ class RegistroService:
         # Crear una lista con los datos de los despachos
         data = [
             {
-                'Registro': despacho.reg_consecutivo,
                 'Tiquete': despacho.reg_tiquete,
+                'Registro': despacho.reg_consecutivo,
                 'Tipo': despacho.tipo.tr_nombre,
                 'Fecha Entrada': despacho.reg_fechaentrada.strftime("%Y-%m-%d") if despacho.reg_fechaentrada else '',
                 'Hora Entrada': despacho.reg_horaentrada.strftime("%I:%M %p") if despacho.reg_horaentrada else '',
@@ -388,9 +388,9 @@ class RegistroService:
         servicios = result.scalars().all()  # Esto obtiene los registros reales
 
         data = [
-            {
-                'Registro': servicio.reg_consecutivo,
+            { 
                 'Tiquete': servicio.reg_tiquete,
+                'Registro': servicio.reg_consecutivo,
                 'Tipo': servicio.tipo.tr_nombre,
                 'Fecha Entrada': servicio.reg_fechaentrada.strftime("%Y-%m-%d") if servicio.reg_fechaentrada else '',
                 'Hora Entrada': servicio.reg_horaentrada.strftime("%I:%M %p") if servicio.reg_horaentrada else '',
