@@ -119,18 +119,25 @@ class ProductoService:
     def actualizar_producto(self, prod_id: int, producto_data: ProductoUpdate):
         statement = select(Producto).where(Producto.prod_id == prod_id)
         producto_db = self.db.exec(statement).first()
-        
+
         if not producto_db:
             return None
 
         update_data = producto_data.dict(exclude_unset=True)
+
         for key, value in update_data.items():
+            # Validar campos de clave foránea: no permitir None ni 0
+            if key in ["prod_idunidadmedida", "prod_idtipoproducto", "prod_idprocesoproducto"]:
+                if value in [None, 0]:
+                    continue  # ignorar actualización con valores inválidos
+
             setattr(producto_db, key, value)
 
         self.db.commit()
         self.db.refresh(producto_db)
 
         return producto_db
+
     
     def eliminar_producto(self, prod_id: int) -> bool:
         statement = select(Producto).where(Producto.prod_id == prod_id)
