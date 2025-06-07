@@ -36,7 +36,7 @@ def obtener_compradores(db: Session = Depends(get_db), usuario: dict = Depends(o
 
 # Crear comprador
 @router.post('/', status_code=status.HTTP_201_CREATED)
-def crear_comprador(comprador: CompradorCreate, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["admin"])) ):
+def crear_comprador(comprador: CompradorCreate, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"])) ):
     comprador_service = CompradorService(db)
     nuevo_comprador = comprador_service.crear_comprador(comprador)
 
@@ -47,7 +47,7 @@ def crear_comprador(comprador: CompradorCreate, db: Session = Depends(get_db), u
 
 # Actualizar comprador
 @router.put("/{id}", status_code=status.HTTP_200_OK)
-def actualizar_comprador(id: int, comprador: CompradorUpdate, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["admin"])) ):
+def actualizar_comprador(id: int, comprador: CompradorUpdate, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"])) ):
     comprador_service = CompradorService(db)
 
     comprador_actualizado = comprador_service.actualizar_comprador(id, comprador)
@@ -58,7 +58,7 @@ def actualizar_comprador(id: int, comprador: CompradorUpdate, db: Session = Depe
 
 # Eliminar comprador
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_comprador(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["admin"])) ):
+def eliminar_comprador(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"])) ):
     comprador_service = CompradorService(db)
     eliminado = comprador_service.eliminar_comprador(id)
 
