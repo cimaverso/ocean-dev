@@ -69,7 +69,6 @@ class Registro(SQLModel, table=True):
     reg_pesoneto: Optional[int] = Field(default=None)
     
     reg_estado: Optional[int] = Field(default=None)
-    reg_acceso: Optional[int] = Field(default=None)
     reg_observaciones: Optional[str] = Field(default=None)
     reg_consecutivo: Optional[int] = Field(default=None)
     reg_tiquete: Optional[int] = Field(default=None)
@@ -173,7 +172,6 @@ class RegistroResponse(SQLModel):
     reg_pesoneto: Optional[int] = None
     factura: Optional[FacturaResponse] = None
     reg_estado: Optional[int] = None
-    reg_acceso: Optional[int] = None
     reg_observaciones: Optional[str] = None
     reg_consecutivo: Optional[int] = None
     reg_tiquete: Optional[int] = None
