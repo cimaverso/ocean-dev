@@ -119,42 +119,7 @@ class RegistroService:
         results = self.db.exec(query).yield_per(500)
         return results.all()
 
-    def abrir_registro(self, registro_id: int):
-        # Obtener el registro por su ID
-        statement = select(Registro).where(Registro.reg_id == registro_id)
-        registro = self.db.exec(statement).first()
-
-        if not registro:
-            return None
-        
-        if registro.reg_acceso == 1:
-            raise HTTPException(status_code=400, detail="El registro ya esta abierto por otro usuario")
-
-        # Marcar como "en uso"
-        registro.reg_acceso = 1
-        self.db.add(registro)
-        self.db.commit()  # Hacemos commit en la base de datos
-
-        return registro
-    
-    def cerrar_registro(self, registro_id: int):
-        # Obtener el registro por su ID
-        statement = select(Registro).where(Registro.reg_id == registro_id)
-        registro = self.db.exec(statement).first()
-
-        if not registro:
-            return None
-        
-        if registro.reg_acceso == 0:
-            raise HTTPException(status_code=200, detail="El registro ya esta cerrado")
-        
-        # Marcar como "sin uso"
-        registro.reg_acceso = 0
-        self.db.add(registro)
-        self.db.commit()  # Hacemos commit en la base de datos
-
-        return registro
-
+   
     def exportar_ingreso(self, consulta: Optional[str] = None, fecha_inicio: Optional[date] = None, fecha_fin: Optional[date] = None):
         print(f"Consulta recibida: {consulta}")
         

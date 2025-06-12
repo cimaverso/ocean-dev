@@ -138,7 +138,6 @@ class ProductoService:
 
         return producto_db
 
-    
     def eliminar_producto(self, prod_id: int) -> bool:
         statement = select(Producto).where(Producto.prod_id == prod_id)
         producto_db = self.db.exec(statement).first()

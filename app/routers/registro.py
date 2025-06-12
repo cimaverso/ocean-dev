@@ -161,24 +161,5 @@ def actualizar_registro(id: int, registro: RegistroUpdate, db: Session = Depends
 
     return {"mensaje": "Registro actualizado exitosamente."}
 
-#Abrir registr
-@router.put("/abrir/{id}")
-def abrir_registro(id: int, db: Session = Depends(get_db), usuario: dict = Depends(obtener_usuario)):
-    service_registro = RegistroService(db)
-    registro = service_registro.abrir_registro(id)
 
-    if not registro:
-        raise HTTPException(status_code=404, detail="Registro no encontrado")
  
-    return {"mensaje": "Registro abierto exitosamente."}
-
-#Cerrar registro
-@router.put("/cerrar/{id}")
-def cerrar_registro(id: int, db: Session = Depends(get_db), usuario: dict = Depends(obtener_usuario)):
-    service_registro = RegistroService(db)
-    registro = service_registro.cerrar_registro(id)
-
-    if not registro:
-        raise HTTPException(status_code=404, detail="Registro no encontrado")
- 
-    return {"mensaje": "Registro cerrado exitosamente."}
