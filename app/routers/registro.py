@@ -76,14 +76,13 @@ def imprimir_registro(id: int, db: Session = Depends(get_db), usuario: dict = De
         )
     
     
-
-@router.get("/estadistica/ingresos", include_in_schema=False, status_code=status.HTTP_200_OK)
+@router.get("/estadistica/ingresos", status_code=status.HTTP_200_OK)
 def obtener_registro_peso(db: Session = Depends(get_db), usuario: dict = Depends(obtener_usuario)):
     registro_servicie = RegistroService(db)
     registros = registro_servicie.calcular_ingresos()
     return registros
 
-@router.get("/estadistica/despachos", include_in_schema=False, status_code=status.HTTP_200_OK)
+@router.get("/estadistica/despachos", status_code=status.HTTP_200_OK)
 def obtener_registro_peso(db: Session = Depends(get_db), usuario: dict = Depends(obtener_usuario)):
     registro_servicie = RegistroService(db)
     registros = registro_servicie.calcular_despachos()

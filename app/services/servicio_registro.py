@@ -663,19 +663,3 @@ class RegistroService:
 
         return registro_db
 
-
-
-
-
-    
-
-    
-
-
-
-        
-
-
-
-
-
