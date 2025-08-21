@@ -4,6 +4,9 @@ import pandas as pd
 import io
 from typing import Optional
 
+
+#Comprador 
+
 class CompradorService:
     def __init__(self, db: Session):
         self.db = db
