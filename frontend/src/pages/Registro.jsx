@@ -1,4 +1,4 @@
-
+import axios from "axios";
 import Sidebar from "../components/Layouts/Sidebar";
 import Header from "../components/Layouts/Header";
 import FilterSection from "../components/Registro/Filtro";
@@ -9,7 +9,6 @@ import TablaHistorial from "../components/Registro/Historial";
 import BotonesVista from "../components/Registro/BotonesVista";
 import Notification from "../components/Layouts/Notificacion";
 import { useAuth } from "../context/AuthContext";
-import axios from 'axios'; 
 
 const Registro = () => {
   const [viewType, setViewType] = useState("transito");
@@ -26,25 +25,14 @@ const Registro = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = sessionStorage.getItem("token");
-     
       try {
         if (viewType === "transito") {
-          
-          const response = await axios.get("https://ocean-syt-production.up.railway.app/registro/transito", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          
+          const response = await axios.get("http://127.0.0.1:5000/obtener_registros");
+          console.log("Registros de tránsito recibidos:", response.data);
           setFilteredData(response.data);
         } else if (viewType === "historial") {
-          const historialResponse = await axios.get("https://ocean-syt-production.up.railway.app/registro/historial",{
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          
+          const historialResponse = await axios.get("http://127.0.0.1:5000/obtener_tiquetes_diarios");
+          console.log("Tiquetes del historial recibidos:", historialResponse.data);
           setHistorialData(historialResponse.data);
         }
       } catch (error) {
@@ -59,10 +47,10 @@ const Registro = () => {
   useEffect(() => {
     if (viewType === "transito") {
       setTableData(filteredData);
-      
+      console.log("Datos de tabla para tránsito:", filteredData);
     } else if (viewType === "historial") {
       setTableData(historialData);
-      
+      console.log("Datos de tabla para historial:", historialData);
     }
   }, [viewType, filteredData, historialData]);
 
@@ -101,13 +89,9 @@ const Registro = () => {
     }
   };
 
-  const ingresoCount = tableData.filter(record => record.tipo.tr_nombre === "INGRESO").length;
-  const despachoCount = tableData.filter(record => record.tipo.tr_nombre === "DESPACHO").length;
-  const serviciosCount = tableData.filter(record => record.tipo.tr_nombre === "SERVICIOS").length;
-
   const handleResultsChange = (data) => {
     setTableData(data);
-    
+    console.log("Datos filtrados:", data);
   };
 
   return (
@@ -139,14 +123,7 @@ const Registro = () => {
               )}
             </div>
 
-            <div className="m-2 p-2 flex justify-between items-center gap-2">
-              
-              <div className="flex gap-4">
-                <span className="font-bold">INGRESO: {ingresoCount}</span>
-                <span className="font-bold">DESPACHO: {despachoCount}</span>
-                <span className="font-bold">SERVICIOS: {serviciosCount}</span>
-              </div>
-
+            <div className="m-2 p-2 flex justify-end text-ocean1">
               <Link
                 to="/formulario"
                 className="bg-white font-bold px-1 w-42 h-12 mt-5 hover:drop-shadow-2xl hover:bg-[#6D80A6] hover:text-[#f2f2f2] rounded content-center"

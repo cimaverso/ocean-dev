@@ -1,80 +1,58 @@
 import Sidebar from "../components/Layouts/Sidebar";
 import Header from "../components/Layouts/Header";
 import { Link } from "react-router-dom";
-import React, { useEffect, useState } from "react";
-import Notification from "../components/Layouts/Notificacion";
-import TarjetaInicio from "../components/Layouts/TarjetaInicio";
 import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import Notification from '../components/Layouts/Notificacion';
+import TarjetaInicio from "../components/Layouts/TarjetaInicio";
 
 function Inicio() {
   const [errorMessage, setErrorMessage] = useState("");
   const [data, setData] = useState({
     ingresos: [],
-    despachos: [],
-    totalIngresos: "0.000",
-    totalDespachos: "0.000",
+    despachos: []
   });
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      setErrorMessage("No se encontró el token. Inicia sesión.");
-      return;
-    }
-
-    // Obtener datos de despachos
-    axios
-      .get("https://ocean-syt-production.up.railway.app/registro/estadistica/despachos", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+    // Llamada a la API para "despachos"
+    axios.get('http://localhost:5000/despachos')
       .then((response) => {
-        const { total_peso_neto, destinos } = response.data;
+        const { resultados } = response.data;
 
-        const formattedDespachos = Object.keys(destinos || {}).map((destino) => ({
+        const formattedDespachos = Object.keys(resultados).map((destino) => ({
           label: destino,
-          value: `${destinos[destino].peso_neto_destino} kg`,
+          value: `${resultados[destino].peso_neto} Kg`,
+          change: `${resultados[destino].porcentaje}%`
         }));
 
-        setData((prevData) => ({
+        setData(prevData => ({
           ...prevData,
           despachos: formattedDespachos,
-          totalDespachos: total_peso_neto || "0.000",
         }));
       })
       .catch((error) => {
-        console.error("Error en despachos:", error);
-        setErrorMessage("Error al obtener los datos de despachos");
+        setErrorMessage('Error al obtener los datos de despachos:', error);
       });
 
-    // Obtener datos de ingresos
-    axios
-      .get("https://ocean-syt-production.up.railway.app/registro/estadistica/ingresos", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+    // Llamada a la API para "ingresos"
+    axios.get('http://localhost:5000/ingresos')
       .then((response) => {
-        const { total_peso_neto, productos } = response.data;
+        const { resultados } = response.data;
 
-        const formattedIngresos = Object.keys(productos || {}).map((producto) => ({
+        const formattedIngresos = Object.keys(resultados).map((producto) => ({
           label: producto,
-          value: `${productos[producto].peso_neto_producto} kg`,
+          value: `${resultados[producto].peso_neto} Kg`
         }));
 
-        setData((prevData) => ({
+        setData(prevData => ({
           ...prevData,
           ingresos: formattedIngresos,
-          totalIngresos: total_peso_neto || "0.000",
         }));
       })
       .catch((error) => {
-        console.error("Error en ingresos:", error);
-        setErrorMessage("Error al obtener los datos de ingresos");
+        setErrorMessage('Error al obtener los datos de ingresos:', error);
       });
   }, []);
-
 
   // Filtrar datos para mostrar solo aquellos con valores mayores a 0
   const filteredIngresos = data.ingresos.filter(
@@ -86,75 +64,41 @@ function Inicio() {
   );
 
   return (
-    <div className="min-h-screen w-full font-montserrat bg-[#F2F2F2]">
+    <div className="h-screen w-screen font-montserrat bg-[#F2F2F2]">
       <Notification message={errorMessage} type="error" />
       <div className="flex h-full">
         <Sidebar />
-        <div className="flex flex-col flex-1 w-full overflow-auto">
+        <div className="flex flex-col flex-1 w-screen h-dvh overflow-auto">
           <Header />
           <div className="m-2 p-4 content-center">
             {/* Sección de Ingresos */}
-            <div className="m-1 p-3">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">INGRESOS</h2>
-                <div className="bg-blue-100 p-2 rounded-md">
-                  <span className="font-semibold">Total: </span>
-                  <span className="font-bold">{data.totalIngresos} Ton</span>
-                </div>
-              </div>
-
+            <div className="m-2 p-5">
+              <h2 className="text-2xl font-bold mb-4">INGRESOS</h2>
               <div className="m-2 p-2 flex flex-nowrap overflow-auto">
-                {filteredIngresos.length > 0 ? (
-                  <div className="flex flex-row gap-6">
-                    {filteredIngresos.map((item, index) => (
-                      <TarjetaInicio
-                        key={index}
-                        label={item.label}
-                        value={item.value}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 italic">
-                    No hay ingresos registrados para hoy
-                  </p>
-                )}
+                <div className="flex flex-row gap-6">
+                  {filteredIngresos.map((item, index) => (
+                    <TarjetaInicio key={index} label={item.label} value={item.value} />
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Sección de Despachos */}
             <div className="m-2 p-5">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">DESPACHOS</h2>
-                <div className="bg-green-100 p-2 rounded-md">
-                  <span className="font-semibold">Total: </span>
-                  <span className="font-bold">{data.totalDespachos} Ton</span>
-                </div>
-              </div>
-
+              <h2 className="text-2xl font-bold mb-4">DESPACHOS</h2>
               <div className="m-2 p-2 flex flex-nowrap overflow-auto">
-                {filteredDespachos.length > 0 ? (
-                  <div className="flex flex-row gap-6">
-                    {filteredDespachos.map((item, index) => (
-                      <TarjetaInicio
-                        key={index}
-                        label={item.label}
-                        value={item.value}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 italic">
-                    No hay despachos registrados para hoy
-                  </p>
-                )}
+                <div className="flex flex-row gap-6">
+                  {filteredDespachos.map((item, index) => (
+                    <TarjetaInicio key={index} label={item.label} value={item.value} />
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Botones de acción */}
-            <div className="m-2 p-2 flex justify-end gap-4">
+            {/* Botón de Crear Ingreso */}
+            <div className="m-2 p-2 flex justify-end text-ocean1">
               <Link to="/formulario">
-                <button className="bg-white font-bold px-6 py-3 hover:drop-shadow-2xl hover:bg-[#6D80A6] hover:text-[#f2f2f2] rounded">
+                <button className="bg-white font-bold px-2 w-42 h-12 mt-5 hover:drop-shadow-2xl hover:bg-[#6D80A6] hover:text-[#f2f2f2] rounded">
                   CREAR INGRESO
                 </button>
               </Link>

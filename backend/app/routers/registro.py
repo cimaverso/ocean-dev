@@ -5,7 +5,7 @@ from sqlmodel import Session
 from app.models.registro.modelo_registro import RegistroResponse, RegistroCreate, RegistroUpdate
 from app.services.servicio_registro import RegistroService
 from app.config.database import get_db
-from app.core.core_auth import obtener_usuario, verificar_rol
+from app.core.security import obtener_usuario, verificar_rol
 from fastapi.responses import StreamingResponse, JSONResponse
 from typing import Optional
 from datetime import date

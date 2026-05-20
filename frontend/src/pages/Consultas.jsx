@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import moment from "moment";
+import axios from "axios";
+import moment from 'moment';
 import Sidebar from "../components/Layouts/Sidebar";
 import Header from "../components/Layouts/Header";
 import Table from "../components/Layouts/Tabla";
@@ -7,17 +8,14 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import InputField from "../components/Layouts/InputField";
 import SelectField from "../components/Layouts/SelectField";
 import Notification from "../components/Layouts/Notificacion";
+import iconTxt from "../assets/txt.svg";
+import iconPdf from "../assets/pdf.svg";
+import iconExcel from "../assets/excel.svg";
 import { useNavigate } from "react-router-dom";
-import transformarDatos from "../utils/TransformarDatos";
-import transformarDatosProducto from "../utils/TransformarDatosProducto";
-import transformarDatosHistorial from "../utils/TransformarDatosHistorial";
-import axios from "axios";
-const iconExcel = "/assets/excel.svg";
-
-
+import { useAuth } from "../context/AuthContext";
 
 function Consultas() {
-  const [formType, setFormType] = useState("INGRESO");
+  const [formType, setFormType] = useState("Ingreso");
   const [ingresos, setIngresos] = useState([]);
   const [despachos, setDespachos] = useState([]);
   const [servicios, setServicios] = useState([]);
@@ -25,6 +23,9 @@ function Consultas() {
   const [proveedores, setProveedores] = useState([]);
   const [terceros, setTerceros] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [productosEntrada, setProductosEntrada] = useState([]);
+  const [productosSalida, setProductosSalida] = useState([]);
+  const [productosEntradaSalida, setProductosEntradaSalida] = useState([]);
   const [varios, setVarios] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
   const [trailers, setTrailers] = useState([]);
@@ -39,86 +40,55 @@ function Consultas() {
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
   const [procesosProducto, setProcesosProducto] = useState([]);
   const [unidadesMedida, setUnidadesMedida] = useState([]);
-  const [historial, setHistorial] = useState([]);
   const cancelTokenSource = useRef(null);
   const navigate = useNavigate();
-  const [facturas, setFacturas] = useState([]);
-
+  const userRole = localStorage.getItem("userRole");
+  const [facturas, setFacturas] = useState([])
 
   useEffect(() => {
-    const currentDate = moment().format("YYYY-MM-DD");
+    const currentDate = moment().format('YYYY-MM-DD');
 
-    if (["INGRESO", "DESPACHO", "SERVICIOS", "HISTORIAL"].includes(formType)) {
+    if (["Ingreso", "Despacho", "Servicios"].includes(formType)) {
       setStartDate(currentDate);
       setEndDate(currentDate);
     } else {
-      setStartDate("");
-      setEndDate("");
+      setStartDate('');
+      setEndDate('');
     }
+
+    fetchData();
   }, [formType]);
 
-  useEffect(() => {
-    if (
-      ["INGRESO", "DESPACHO", "SERVICIOS", "HISTORIAL"].includes(formType) &&
-      startDate &&
-      endDate
-    ) {
-      fetchData();
-    }
-  }, [startDate, endDate]);
-
-
   const fetchCommonData = async () => {
-    const token = sessionStorage.getItem("token");
-  
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
-
     try {
-      const [
-        clientesResponse,
-        proveedoresResponse,
-        tercerosResponse,
-        productosResponse,
-        variosResponse,
-        destinosResponse,
-        origenesResponse,
-        patiosResponse,
-        compradoresResponse,
-        transportadorasResponse,
-        conductoresResponse,
-        vehiculosResponse,
-        trailersResponse,
-        facturaResponse,
-        unidadResponse,
-        historialResponse,
-      ] = await Promise.all([
-        axios.get("https://ocean-syt-production.up.railway.app/entidad/1", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/entidad/2", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/entidad/3", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/producto/1", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/producto/2", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/destino/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/origen/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/patio/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/comprador/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/transportadora/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/conductor/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/vehiculo/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/trailer/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/factura/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/medida/", { headers }),
-        axios.get("https://ocean-syt-production.up.railway.app/historial/", { headers }),
+      const [clientesResponse, proveedoresResponse, tercerosResponse, productosEntradaResponse, productosSalidaResponse, productosEntradaSalidaResponse, variosResponse, destinosResponse, origenesResponse, patiosResponse, compradoresResponse, transportadorasResponse, conductoresResponse, vehiculosResponse, trailersResponse, facturaResponse] = await Promise.all([
+        axios.get('http://localhost:5000/clientes'),
+        axios.get('http://localhost:5000/proveedores'),
+        axios.get('http://localhost:5000/terceros'),
+        axios.get('http://localhost:5000/productos_entrada'),
+        axios.get('http://localhost:5000/productos_salida'),
+        axios.get('http://localhost:5000/productos_entrada_salida'),
+        axios.get('http://localhost:5000/servicios'),
+        axios.get('http://localhost:5000/destinos'),
+        axios.get('http://localhost:5000/origenes'),
+        axios.get('http://localhost:5000/patios'),
+        axios.get('http://localhost:5000/compradores'),
+        axios.get('http://localhost:5000/transportadoras'),
+        axios.get('http://localhost:5000/conductores'),
+        axios.get('http://localhost:5000/vehiculos'),
+        axios.get('http://localhost:5000/trailers'),
+        axios.get('http://localhost:5000/facturas')
       ]);
 
-      // Set data
       setClientes(clientesResponse.data);
       setProveedores(proveedoresResponse.data);
       setTerceros(tercerosResponse.data);
-      setProductos(productosResponse.data);
+      setProductosEntrada(productosEntradaResponse.data);
+      setProductosSalida(productosSalidaResponse.data);
+      setProductosEntradaSalida(productosEntradaSalidaResponse.data);
       setVarios(variosResponse.data);
       setDestinos(destinosResponse.data);
       setOrigenes(origenesResponse.data);
@@ -129,165 +99,121 @@ function Consultas() {
       setVehiculos(vehiculosResponse.data);
       setTrailers(trailersResponse.data);
       setFacturas(facturaResponse.data);
-      setUnidadesMedida(unidadResponse.data);
-      setHistorial(historialResponse.data);
+
     } catch (error) {
-      console.error("Error fetching common data:", error);
-      setErrorMessage("Error fetching common data: " + error.message);
+      console.error('Error fetching common data:', error);
+      setErrorMessage('Error fetching common data: ' + error.message);
     }
   };
 
-
   const fetchData = async () => {
     setLoading(true);
+    if (cancelTokenSource.current) {
+      cancelTokenSource.current.cancel('Operation canceled due to new request.');
+    }
+    cancelTokenSource.current = axios.CancelToken.source();
 
     try {
-      const token = sessionStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       let apiUrl = "";
       let response;
+      const includeInactive = true;
 
       switch (formType) {
-        case "INGRESO":
-        case "DESPACHO":
-        case "SERVICIOS":
-          const tipoMap = {
-            INGRESO: 1,
-            DESPACHO: 2,
-            SERVICIOS: 3,
-          };
-          const tipoValor = tipoMap[formType];
-
-          const today = moment().format("YYYY-MM-DD");
-          const fechaInicio = startDate || today;
-          const fechaFin = endDate || today;
-
-          apiUrl = `https://ocean-syt-production.up.railway.app/registro/finalizado/${tipoValor}?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
-
-          response = await axios.get(apiUrl, { headers });
-          const dataTransformada = transformarDatos(response.data);
-
-          if (formType === "INGRESO") setIngresos(dataTransformada);
-          if (formType === "DESPACHO") setDespachos(dataTransformada);
-          if (formType === "SERVICIOS") setServicios(dataTransformada);
-          
-
-          fetchCommonData();
+        case "Ingreso":
+        case "Despacho":
+        case "Servicios":
+          apiUrl = `http://localhost:5000/obtener_tiquetes?tipo=${formType.toLowerCase()}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          if (formType === "Ingreso") setIngresos(response.data);
+          if (formType === "Despacho") setDespachos(response.data);
+          if (formType === "Servicios") setServicios(response.data);
+          fetchCommonData()
           break;
-
-        case "CLIENTE":
-          apiUrl = `https://ocean-syt-production.up.railway.app/entidad/1`;
-          response = await axios.get(apiUrl, { headers });
+        case "Cliente":
+          apiUrl = `http://localhost:5000/clientes?incluir_inactivos=${includeInactive}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setClientes(response.data);
           break;
-
-        case "PROVEEDOR":
-          apiUrl = `https://ocean-syt-production.up.railway.app/entidad/2`;
-          response = await axios.get(apiUrl, { headers });
+        case "Proveedor":
+          apiUrl = `http://localhost:5000/proveedores?incluir_inactivos=${includeInactive}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setProveedores(response.data);
           break;
-
-        case "TERCERO":
-          apiUrl = `https://ocean-syt-production.up.railway.app/entidad/3`;
-          response = await axios.get(apiUrl, { headers });
+        case "Tercero":
+          apiUrl = `http://localhost:5000/terceros?incluir_inactivos=${includeInactive}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setTerceros(response.data);
           break;
-
-        case "PRODUCTO":
+        case "Producto":
           try {
-            const url = `https://ocean-syt-production.up.railway.app/producto/1`;
-            response = await axios.get(url, { headers });
-            const dataTransformadaProducto = transformarDatosProducto(response.data);
-            fetchProcesosProducto(dataTransformadaProducto);
-            fetchUnidadesMedida(dataTransformadaProducto);
-            setProductos(dataTransformadaProducto);
+            const url = `http://localhost:5000/productos?incluir_inactivos=${includeInactive}`;
+            const response = await axios.get(url, { cancelToken: cancelTokenSource.current.token });
+            const allProductos = response.data;
+            fetchProcesosProducto();
+            fetchUnidadesMedida();
+            setProductos(allProductos);
           } catch (error) {
-            console.error("Error fetching products data:", error);
+            console.error('Error fetching products data:', error);
           }
           break;
-
-        case "VARIOS":
-          apiUrl = `https://ocean-syt-production.up.railway.app/producto/2`;
-          response = await axios.get(apiUrl, { headers });
-          const dataTransformadaVarios = transformarDatosProducto(response.data);
-          setVarios(dataTransformadaVarios);
-          fetchUnidadesMedida(dataTransformadaVarios);
+        case "Varios":
+          apiUrl = `http://localhost:5000/servicios?incluir_inactivos=${includeInactive}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          setVarios(response.data);
+          fetchUnidadesMedida();
           break;
-
-        case "VEHICULO":
-          apiUrl = `https://ocean-syt-production.up.railway.app/vehiculo/`;
-          response = await axios.get(apiUrl, { headers });
+        case "Vehiculo":
+          apiUrl = `http://localhost:5000/vehiculos?incluir_inactivos=${includeInactive}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setVehiculos(response.data);
+          fetchConductores();
           break;
-
-        case "CONDUCTOR":
-          apiUrl = `https://ocean-syt-production.up.railway.app/conductor/`;
-          response = await axios.get(apiUrl, { headers });
+        case "Conductor":
+          apiUrl = `http://localhost:5000/conductores?incluir_inactivos=${includeInactive}`;
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setConductores(response.data);
           break;
-
-        case "ORIGEN":
-          apiUrl = "https://ocean-syt-production.up.railway.app/origen/";
-          response = await axios.get(apiUrl, { headers });
+        case "Origen":
+          apiUrl = "http://localhost:5000/origenes";
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setOrigenes(response.data);
           break;
-
-        case "DESTINO":
-          apiUrl = "https://ocean-syt-production.up.railway.app/destino/";
-          response = await axios.get(apiUrl, { headers });
+        case "Destino":
+          apiUrl = "http://localhost:5000/destinos";
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setDestinos(response.data);
           break;
-
-        case "PATIO":
-          apiUrl = "https://ocean-syt-production.up.railway.app/patio/";
-          response = await axios.get(apiUrl, { headers });
+        case "Patio":
+          apiUrl = "http://localhost:5000/patios";
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setPatios(response.data);
           break;
-
-        case "COMPRADOR":
-          apiUrl = "https://ocean-syt-production.up.railway.app/comprador/";
-          response = await axios.get(apiUrl, { headers });
+        case "Comprador":
+          apiUrl = "http://localhost:5000/compradores";
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setCompradores(response.data);
           break;
-
-        case "TRAILER":
-          apiUrl = "https://ocean-syt-production.up.railway.app/trailer/";
-          response = await axios.get(apiUrl, { headers });
+        case "Trailer":
+          apiUrl = "http://localhost:5000/trailers"; 
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setTrailers(response.data);
           break;
-
-        case "TRANSPORTADORA":
-          apiUrl = "https://ocean-syt-production.up.railway.app/transportadora/";
-          response = await axios.get(apiUrl, { headers });
+        case "Transportadora":
+          apiUrl = "http://localhost:5000/transportadoras";
+          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
           setTransportadoras(response.data);
           break;
-
-        case "FACTURA":
-          apiUrl = "https://ocean-syt-production.up.railway.app/factura/";
-          response = await axios.get(apiUrl, { headers });
+        case "Factura":
+          apiUrl = 'http://127.0.0.1:5000/facturas';
+          response = await axios.get(apiUrl, {cancelToken: cancelTokenSource.current.token});
           setFacturas(response.data);
           break;
-
-        case "MEDIDA":
-          apiUrl = "https://ocean-syt-production.up.railway.app/medida/";
-          response = await axios.get(apiUrl, { headers });
-          setUnidadesMedida(response.data);
-          break;
-
-        case "HISTORIAL":
-          apiUrl = "https://ocean-syt-production.up.railway.app/historial/";
-          response = await axios.get(apiUrl, { headers });
-          const dataTransformadaHistorial = transformarDatosHistorial(response.data);
-          setHistorial(dataTransformadaHistorial);
-          break;
-
         default:
           break;
       }
     } catch (error) {
       if (axios.isCancel(error)) {
-        console.log("Request canceled", error.message);
+        console.log('Request canceled', error.message);
       } else {
         setErrorMessage("Error fetching data: " + error.message);
       }
@@ -298,113 +224,50 @@ function Consultas() {
 
   const fetchProcesosProducto = async () => {
     try {
-      const response = await axios.get(
-        "https://ocean-syt-production.up.railway.app/proceso"
-      );
+      const response = await axios.get('http://localhost:5000/obtener_procesos_producto', { cancelToken: cancelTokenSource.current.token });
       setProcesosProducto(response.data);
     } catch (error) {
-      console.error("Error fetching procesos producto:", error);
+      console.error('Error fetching procesos producto:', error);
     }
   };
 
   const fetchUnidadesMedida = async () => {
     try {
-      const response = await axios.get("https://ocean-syt-production.up.railway.app/medida/");
+      const response = await axios.get('http://localhost:5000/unidades', { cancelToken: cancelTokenSource.current.token });
       setUnidadesMedida(response.data);
     } catch (error) {
-      console.error("Error fetching unidades de medida:", error);
+      console.error('Error fetching unidades de medida:', error);
     }
   };
 
+  const fetchConductores = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/conductores', { cancelToken: cancelTokenSource.current.token });
+      setConductores(response.data);
+    } catch (error) {
+      console.error('Error fetching conductores:', error);
+    }
+  }; 
 
   useEffect(() => {
     fetchData();
   }, [formType]);
 
-  const handleExport = async () => {
-    let apiUrl = "";
+  const handleExport = () => {
+    let apiUrl = `http://localhost:5000/exportar_datos?tipo=${formType}&searchQuery=${encodeURIComponent(searchQuery)}`;
 
-    if (formType === "INGRESO") {
-      apiUrl = `/registro/exportar/ingresos?fecha_inicio=${startDate}&fecha_fin=${endDate}&consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "DESPACHO") {
-      apiUrl = `/registro/exportar/despachos?fecha_inicio=${startDate}&fecha_fin=${endDate}&consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "SERVICIOS") {
-      apiUrl = `/registro/exportar/servicios?fecha_inicio=${startDate}&fecha_fin=${endDate}&consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "HISTORIAL") {
-      apiUrl = `/historial/exportar?fecha_inicio=${startDate}&fecha_fin=${endDate}&consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "CLIENTE") {
-      apiUrl = `/entidad/exportar/1?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "PROVEEDOR") {
-      apiUrl = `/entidad/exportar/2?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "TERCERO") {
-      apiUrl = `/entidad/exportar/3?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "PRODUCTO") {
-      apiUrl = `/producto/exportar/1?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "VARIOS") {
-      apiUrl = `/producto/exportar/2?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "VEHICULO") {
-      apiUrl = `/vehiculo/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "TRAILER") {
-      apiUrl = `/trailer/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "CONDUCTOR") {
-      apiUrl = `/conductor/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "TRANSPORTADORA") {
-      apiUrl = `/transportadora/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "COMPRADOR") {
-      apiUrl = `/comprador/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "ORIGEN") {
-      apiUrl = `/origen/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "DESTINO") {
-      apiUrl = `/destino/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "PATIO") {
-      apiUrl = `/patio/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "FACTURA") {
-      apiUrl = `/factura/exportar?consulta=${encodeURIComponent(searchQuery)}`;
-    } else if (formType === "MEDIDA") {
-      apiUrl = `/medida/exportar?consulta=${encodeURIComponent(searchQuery)}`;
+    if (["Ingreso", "Despacho", "Servicios"].includes(formType)) {
+      apiUrl += `&start_date=${startDate}&end_date=${endDate}`;
     }
 
-    if (!apiUrl) return;
-
-    try {
-      const token = sessionStorage.getItem("token");
-
-      const response = await axios.get(`https://ocean-syt-production.up.railway.app${apiUrl}`, {
-        responseType: 'blob',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const disposition = response.headers['content-disposition'];
-      let filename = 'exportacion.xlsx';
-
-      if (disposition) {
-        const match = disposition.match(/filename="?([^"]+)"?/);
-        if (match && match[1]) {
-          filename = match[1];
-        }
-      }
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error('Error exportando:', error);
-    }
+    window.location.href = apiUrl;
   };
 
-  
-  
   const handleDoubleClick = (record) => {
-    if (["INGRESO", "DESPACHO", "SERVICIOS"].includes(formType)) {
+    if (["Ingreso", "Despacho", "Servicios"].includes(formType)) {
       let formTypeToNavigate;
       if (record.tipo) {
-        switch (record.tipo) {
+        switch (record.tipo.toUpperCase()) {
           case "INGRESO":
             formTypeToNavigate = "INGRESO";
             break;
@@ -423,8 +286,8 @@ function Consultas() {
             state: {
               record,
               formType: formTypeToNavigate,
-              isTiquete: true,
-            },
+              isTiquete: true
+            }
           });
         }
       } else {
@@ -434,325 +297,259 @@ function Consultas() {
   };
 
   const columnConfig = {
-    INGRESO: [
-      {name: "registro_id", title: "ID", hidden: true},
-      { name: "consecutivo_tiquete", title: "Tiquete"},
-      { name: "consecutivo", title: "Registro" },
+    Ingreso: [
+      { name: "tiquete", title: "Tiquete" },
+      { name: "registro", title: "Registro" },
       { name: "tipo", title: "Tipo" },
-      { name: "factura_fecha", title: "Facturado" },
-      { name: "origen_nombre", title: "Origen" },
-      { name: "fecha_entrada", title: "Fecha Entrada" },
-      { name: "hora_entrada", title: "Hora Entrada" },
-      { name: "fecha_salida", title: "Fecha Salida" },
-      { name: "hora_salida", title: "Hora Salida" },
-      { name: "vehiculo_placa", title: "Placa" },
-      { name: "trailer_placa", title: "Trailer" },
-      { name: "conductor_nombre", title: "Conductor" },
-      { name: "conductor_cedula", title: "Cedula Conductor" },
-      { name: "entidad_codigo", title: "Código Proveedor" },
-      { name: "entidad_nombre", title: "Proveedor" },
-      { name: "comprador_codigo", title: "Código Comprador" },
-      { name: "comprador_nombre", title: "Comprador" },
-      { name: "producto_codigo", title: "Código Producto" },
-      { name: "producto_nombre", title: "Producto" },
-      { name: "peso_bruto", title: "Peso Entrada" },
-      { name: "peso_tara", title: "Peso Salida" },
-      { name: "peso_neto", title: "Peso Neto" },
-      { name: "patio_nombre", title: "Patio" },
+      { name: "numero_factura", title: "Facturado" },
+      { name: "nombreOrigen", title: "Origen" },
+      { name: "fEntrada", title: "Fecha Entrada" },
+      { name: "hEntrada", title: "Hora Entrada" },
+      { name: "fSalida", title: "Fecha Salida" },
+      { name: "hSalida", title: "Hora Salida" },
+      { name: "placa", title: "Placa" },
+      { name: "trailer", title: "Trailer" },
+      { name: "conductor", title: "Conductor" },
+      { name: "cedulaConductor", title: "Cedula Conductor" },
+      { name: "codigoEntidad", title: "Código Proveedor" },
+      { name: "nombreEntidad", title: "Proveedor" },
+      { name: "codigoComprador", title: "Código Comprador" },
+      { name: "nombreComprador", title: "Comprador" },
+      { name: "codigoProducto", title: "Código Producto" },
+      { name: "nombreProducto", title: "Producto" },
+      { name: "pesoBruto", title: "Peso Entrada" },
+      { name: "pesoTara", title: "Peso Salida" },
+      { name: "pesoNeto", title: "Peso Neto" },      
+      { name: "nombrePatio", title: "Patio" },
       { name: "observaciones", title: "Observaciones" },
     ],
-    DESPACHO: [
-      {name: "registro_id", title: "ID", hidden: true},
-      { name: "consecutivo_tiquete", title: "Tiquete"},
-      { name: "consecutivo", title: "Registro" },
+    Despacho: [
+      { name: "tiquete", title: "Tiquete" },
+      { name: "registro", title: "Registro" },
       { name: "tipo", title: "Tipo" },
-      { name: "fecha_entrada", title: "Fecha Entrada" },
-      { name: "hora_entrada", title: "Hora Entrada" },
-      { name: "fecha_salida", title: "Fecha Salida" },
-      { name: "hora_salida", title: "Hora Salida" },
-      { name: "vehiculo_placa", title: "Placa" },
-      { name: "trailer_placa", title: "Trailer" },
-      { name: "conductor_nombre", title: "Conductor" },
-      { name: "conductor_cedula", title: "Cedula Conductor" },
-      { name: "entidad_codigo", title: "Código Cliente" },
-      { name: "entidad_nombre", title: "Cliente" },
-      { name: "destino_codigo", title: "Código Destino" },
-      { name: "destino_nombre", title: "Destino" },
-      { name: "producto_codigo", title: "Código Producto" },
-      { name: "producto_nombre", title: "Producto" },
-      { name: "peso_tara", title: "Peso Entrada" },
-      { name: "peso_bruto", title: "Peso Salida" },
-      { name: "peso_neto", title: "Peso Neto" },
-      { name: "origen_nombre", title: "Origen" },
-      { name: "patio_nombre", title: "Patio" },
-      { name: "transportadora_nombre", title: "Transportadora" },
-      { name: "orden", title: "Orden" },
-      { name: "precinto", title: "Precintos" },
-      { name: "observaciones", title: "Observaciones" },
+      { name: "fEntrada", title: "Fecha Entrada" },
+      { name: "hEntrada", title: "Hora Entrada" },
+      { name: "fSalida", title: "Fecha Salida" },
+      { name: "hSalida", title: "Hora Salida" },
+      { name: "placa", title: "Placa" },
+      { name: "trailer", title: "Trailer" },
+      { name: "conductor", title: "Conductor" },
+      { name: "cedulaConductor", title: "Cedula Conductor" },
+      { name: "codigoEntidad", title: "Código Cliente" },
+      { name: "nombreEntidad", title: "Cliente" },
+      { name: "codigoDestino", title: "Código Destino" },
+      { name: "nombreDestino", title: "Destino" },
+      { name: "codigoProducto", title: "Código Producto" },
+      { name: "nombreProducto", title: "Producto" },
+      { name: "pesoTara", title: "Peso Entrada" },
+      { name: "pesoBruto", title: "Peso Salida" },
+      { name: "pesoNeto", title: "Peso Neto" },
+      { name: "nombreOrigen", title: "Origen" },
+      { name: "nombrePatio", title: "Patio" },
+      { name: "nombreTransportadora", title: "Transportadora" },
+      { name: "ordenTransportadora", title: "Orden" },
+      { name: "precintoTransportadora", title: "Precintos" },
+      { name: "observaciones", title: "Observaciones" }
     ],
-    SERVICIOS: [
-      {name: "registro_id", title: "ID", hidden: true},
-      { name: "consecutivo_tiquete", title: "Tiquete"},
-      { name: "consecutivo", title: "Registro" },
+    Servicios: [
+      { name: "tiquete", title: "Tiquete" },
+      { name: "registro", title: "Registro" },
       { name: "tipo", title: "Tipo" },
-      { name: "fecha_entrada", title: "Fecha Entrada" },
-      { name: "hora_entrada", title: "Hora Entrada" },
-      { name: "fecha_salida", title: "Fecha Salida" },
-      { name: "hora_salida", title: "Hora Salida" },
-      { name: "vehiculo_placa", title: "Placa" },
-      { name: "trailer_placa", title: "Trailer" },
-      { name: "conductor_nombre", title: "Conductor" },
-      { name: "conductor_cedula", title: "Cedula Conductor" },
-      { name: "entidad_codigo", title: "Código Tercero" },
-      { name: "entidad_nombre", title: "Tercero" },
-      { name: "comprador_codigo", title: "Código Comprador" },
-      { name: "comprador_nombre", title: "Comprador" },
-      { name: "producto_codigo", title: "Código Servicio" },
-      { name: "producto_nombre", title: "Servicio" },
-      { name: "peso_bruto", title: "Peso Entrada" },
-      { name: "peso_tara", title: "Peso Salida" },
-      { name: "peso_neto", title: "Peso Neto" },
-      { name: "origen_nombre", title: "Origen" },
-      { name: "patio_nombre", title: "Patio" },
-      { name: "unidad_medida", title: "Unidad" },
+      { name: "fEntrada", title: "Fecha Entrada" },
+      { name: "hEntrada", title: "Hora Entrada" },
+      { name: "fSalida", title: "Fecha Salida" },
+      { name: "hSalida", title: "Hora Salida" },
+      { name: "placa", title: "Placa" },
+      { name: "trailer", title: "Trailer" },
+      { name: "conductor", title: "Conductor" },
+      { name: "cedulaConductor", title: "Cedula Conductor" },
+      { name: "codigoEntidad", title: "Código Tercero" },
+      { name: "nombreEntidad", title: "Tercero" },
+      { name: "codigoComprador", title: "Código Comprador" },
+      { name: "nombreComprador", title: "Comprador" },
+      { name: "codigoProducto", title: "Código Servicio" },
+      { name: "nombreProducto", title: "Servicio" },
+      { name: "pesoBruto", title: "Peso Entrada" },
+      { name: "pesoTara", title: "Peso Salida" },
+      { name: "pesoNeto", title: "Peso Neto" },
+      { name: "nombreOrigen", title: "Origen" },
+      { name: "nombrePatio", title: "Patio" },
+      { name: "unidad", title: "Unidad" },
       { name: "cantidad", title: "Cantidad" },
-      { name: "observaciones", title: "Observaciones" },
+      { name: "observaciones", title: "Observaciones" }
     ],
-    
-    CLIENTE: [
-      { name: "ent_id", title: "ID", hidden: true },
-      { name: "ent_codigo", title: "CÓDIGO" },
-      { name: "ent_nombre", title: "CLIENTE" },
-      { name: "ent_nit", title: "NIT" },
-      { name: "ent_telefono", title: "TELÉFONO" },
-      
+    Cliente: [
+      { name: "id_entidad", title: "ID", hidden: true },
+      { name: "codigo_entidad", title: "Código" },
+      { name: "nombre_entidad", title: "Cliente" },
+      { name: "nit_entidad", title: "NIT" },
+      { name: "telefono_entidad", title: "Teléfono" },
+      { name: "direccion_entidad", title: "Dirección" },
+      { name: "estado_entidad", title: "Estado", hidden: true },
     ],
-    PROVEEDOR: [
-      { name: "ent_id", title: "ID", hidden: true },
-      { name: "ent_codigo", title: "CÓDIGO" },
-      { name: "ent_nombre", title: "PROVEEDOR" },
-      { name: "ent_nit", title: "NIT" },
-      { name: "ent_telefono", title: "TELÉFONO" },
-      
+    Proveedor: [
+      { name: "id_entidad", title: "ID", hidden: true },
+      { name: "codigo_entidad", title: "Código" },
+      { name: "nombre_entidad", title: "Proveedor" },
+      { name: "nit_entidad", title: "NIT" },
+      { name: "telefono_entidad", title: "Teléfono" },
+      { name: "direccion_entidad", title: "Dirección" },
+      { name: "estado_entidad", title: "Estado", hidden: true },
     ],
-    TERCERO: [
-      { name: "ent_id", title: "ID", hidden: true },
-      { name: "ent_codigo", title: "CÓDIGO" },
-      { name: "ent_nombre", title: "TERCERO" },
-      { name: "ent_nit", title: "NIT" },
-      { name: "ent_telefono", title: "TELÉFONO" },
-      
+    Tercero: [
+      { name: "id_entidad", title: "ID", hidden: true },
+      { name: "codigo_entidad", title: "Código" },
+      { name: "nombre_entidad", title: "Tercero" },
+      { name: "nit_entidad", title: "NIT" },
+      { name: "telefono_entidad", title: "Teléfono" },
+      { name: "direccion_entidad", title: "Dirección" },
+      { name: "estado_entidad", title: "Estado", hidden: true },
     ],
-
-    PRODUCTO: [
-      { name: "producto_id", title: "ID", hidden: true },
-      { name: "producto_codigo", title: "CÓDIGO" },
-      { name: "producto_nombre", title: "PRODUCTO" },
-      { name: "producto_medida", title: "UNIDAD MEDIDA" },
-      { name: "producto_proceso", title: "PROCESO PRODUCTO" },
+    Producto: [
+      { name: "id_producto", title: "ID", hidden: true },
+      { name: "codigo_producto", title: "Código" },
+      { name: "nombre_producto", title: "Producto" },
+      { name: "unidad_medida", title: "Unidad de Medida" },
+      { name: "proceso_producto", title: "Proceso Producto" },
+      { name: "estado_producto", title: "Estado", hidden: true },
     ],
-    VARIOS: [
-      { name: "producto_id", title: "ID", hidden: true },
-      { name: "producto_codigo", title: "CÓDIGO" },
-      { name: "producto_nombre", title: "PRODUCTO" },
-      { name: "producto_medida", title: "UNIDAD MEDIDA" },
-      
+    Varios: [
+      { name: "id_producto", title: "ID", hidden: true },
+      { name: "codigo_producto", title: "Código" },
+      { name: "nombre_producto", title: "Servicio" },
+      { name: "unidad_medida", title: "Unidad Medida" },
+      { name: "estado_producto", title: "Estado", hidden: true },
     ],
-    VEHICULO: [
-      { name: "vehi_id", title: "ID", hidden: true },
-      { name: "vehi_placa", title: "Placa" },
+    Vehiculo: [
+      { name: "id_vehiculo", title: "ID", hidden: true },
+      { name: "placa", title: "Placa" },
+      { name: "estado_vehiculo", title: "Estado", hidden: true },
     ],
-    TRAILER: [
-      { name: "tra_id", title: "ID", hidden: true },
-      { name: "trai_placa", title: "Trailer" },
+    Trailer: [
+      { name: "id_trailer", title: "ID", hidden: true },
+      { name: "trailer", title: "Trailer" },
     ],
-    CONDUCTOR: [
-      { name: "conduct_id", title: "ID", hidden: true },
-      { name: "conduct_codigo", title: "Código" },
-      { name: "conduct_nombre", title: "Conductor" },
-      { name: "conduct_cedula", title: "Cedula" },
-      { name: "conduct_telefono", title: "Telefono" },
+    Conductor: [
+      { name: "id_conductor", title: "ID", hidden: true },
+      { name: "nombre_conductor", title: "Conductor" },
+      { name: "cedula_conductor", title: "Cedula" },
+      { name: "estado_conductor", title: "Estado", hidden: true },
     ],
-    ORIGEN: [
-      { name: "ori_id", title: "ID", hidden: true },
-      { name: "ori_codigo", title: "Codigo" },
-      { name: "ori_nombre", title: "Origen" },
+    Origen: [
+      { name: "id_origen", title: "ID", hidden: true },
+      { name: "codigo_origen", title: "Codigo" },
+      { name: "nombre_origen", title: "Origen" }
     ],
-    DESTINO: [
-      { name: "dest_id", title: "ID", hidden: true },
-      { name: "dest_codigo", title: "Codigo" },
-      { name: "dest_nombre", title: "Destino" },
+    Destino: [
+      { name: "id_destino", title: "ID", hidden: true },
+      { name: "codigo_destino", title: "Codigo" },
+      { name: "nombre_destino", title: "Destino" }
     ],
-    PATIO: [
-      { name: "pat_id", title: "ID", hidden: true },
-      { name: "pat_codigo", title: "Codigo" },
-      { name: "pat_nombre", title: "Patio" },
+    Patio: [
+      { name: "id_patio", title: "ID", hidden: true },
+      { name: "codigo_patio", title: "Codigo" },
+      { name: "nombre_patio", title: "Patio" }
     ],
-    COMPRADOR: [
-      { name: "comp_id", title: "ID", hidden: true },
-      { name: "comp_codigo", title: "Codigo" },
-      { name: "comp_nombre", title: "Comprador" },
-      { name: "comp_nit", title: "NIT" },
-      { name: "comp_telefono", title: "Telefono" },
+    Comprador: [
+      { name: "id_comprador", title: "ID", hidden: true },
+      { name: "codigo_comprador", title: "Codigo" },
+      { name: "nombre_comprador", title: "Comprador" }
     ],
-    TRANSPORTADORA: [
-      { name: "trans_id", title: "ID", hidden: true },
-      { name: "trans_codigo", title: "codigo" },
-      { name: "trans_nombre", title: "Transportadora" },
-      { name: "trans_ciudad", title: "Ciudad" },
-      { name: "trans_nit", title: "NIT" },
-      { name: "trans_telefono", title: "Telefono" },
-      { name: "trans_direccion", title: "Direccion" },
+    Transportadora: [
+      { name: "id_transportadora", title: "ID", hidden: true },
+      { name: "codigo_transportadora", title: "codigo" },
+      { name: "nombre_transportadora", title: "Transportadora" },
+      { name: "ciudad_transportadora", title: "Ciudad" },
+      { name: "nit_transportadora", title: "NIT" },
+      { name: "telefono_transportadora", title: "Telefono" }
     ],
-    FACTURA: [
-      { name: "fact_id", title: "ID", hidden: true },
-      { name: "fac_fecha", title: "Factura" },
-    ],
-    MEDIDA: [
-      { name: "um_id", title: "ID", hidden: true },
-      { name: "um_nombre", title: "Unidad Medida" },
-    ],
-     HISTORIAL: [
-      { name: "historial_id", title: "ID", hidden: true },
-      { name: "historial_registroConsecutivo", title: "Registro" },
-      { name: "historial_registroTipo", title: "Tipo" },
-      { name: "historial_accion", title: "Accion" },
-      { name: "historial_fecha", title: "Fecha" },
-      { name: "historial_hora", title: "Hora" },
-      { name: "historial_usuarioNombre", title: "Usuario" },
-      { name: "historial_usuarioRol", title: "Rol" },
-      
-    ],    
+    Factura:[
+      { name: "id_factura", title: "ID", hidden: true },
+      { name: "numero_factura", title: "Factura" },
+    ]
   };
 
   const formTypes = [
     { value: "", label: "Seleccione" },
-    { value: "INGRESO", label: "INGRESOS" },
-    { value: "DESPACHO", label: "DESPACHOS" },
-    { value: "SERVICIOS", label: "SERVICIOS" },
-    { value: "HISTORIAL", label: "HISTORIAL" },
-    { value: "CLIENTE", label: "CLIENTES" },
-    { value: "PROVEEDOR", label: "PROVEEDORES" },
-    { value: "TERCERO", label: "TERCEROS" },
-    { value: "PRODUCTO", label: "PRODUCTOS" },
-    { value: "VARIOS", label: "VARIOS" },
-    { value: "MEDIDA", label: "UNIDADES DE MEDIDA" },
-    { value: "VEHICULO", label: "VEHICULOS" },
-    { value: "TRAILER", label: "TRAILERS" },
-    { value: "CONDUCTOR", label: "CONDUCTORES" },
-    { value: "ORIGEN", label: "ORIGENES" },
-    { value: "DESTINO", label: "DESTINOS" },
-    { value: "PATIO", label: "PATIOS" },
-    { value: "COMPRADOR", label: "COMPRADORES" },
-    { value: "TRANSPORTADORA", label: "TRANSPORTADORAS" },
-    { value: "FACTURA", label: "FACTURAS" },
-    
-    
+    { value: "Ingreso", label: "Ingresos" },
+    { value: "Despacho", label: "Despachos" },
+    { value: "Servicios", label: "Servicios" },
+    { value: "Cliente", label: "Cliente" },
+    { value: "Proveedor", label: "Proveedor" },
+    { value: "Producto", label: "Producto" },
+    { value: "Varios", label: "Varios" },
+    { value: "Tercero", label: "Tercero" },
+    { value: "Vehiculo", label: "Vehiculo" },
+    { value: "Trailer", label: "Trailer" },
+    { value: "Conductor", label: "Conductor" },
+    { value: "Origen", label: "Origen" },
+    { value: "Destino", label: "Destino" },
+    { value: "Patio", label: "Patio" },
+    { value: "Comprador", label: "Comprador" },
+    { value: "Transportadora", label: "Transportadora" },
+    { value: "Factura", label: "Factura" }
   ];
 
   const columns = columnConfig[formType] || [];
-  const visibleColumns = columns.filter((column) => !column.hidden);
+  const visibleColumns = columns.filter(column => !column.hidden);
 
-  const filteredData = (
-    formType === "CLIENTE"
-      ? clientes
-      : formType === "PROVEEDOR"
-      ? proveedores
-      : formType === "TERCERO"
-      ? terceros
-      : formType === "PRODUCTO"
-      ? productos
-      : formType === "VEHICULO"
-      ? vehiculos
-      : formType === "CONDUCTOR"
-      ? conductores
-      : formType === "INGRESO"
-      ? ingresos
-      : formType === "DESPACHO"
-      ? despachos
-      : formType === "SERVICIOS"
-      ? servicios
-      : formType === "TRAILER"
-      ? trailers
-      : formType === "ORIGEN"
-      ? origenes
-      : formType === "DESTINO"
-      ? destinos
-      : formType === "PATIO"
-      ? patios
-      : formType === "COMPRADOR"
-      ? compradores
-      : formType === "TRANSPORTADORA"
-      ? transportadoras
-      : formType === "VARIOS"
-      ? varios
-      : formType === "FACTURA"
-      ? facturas
-      : formType === "MEDIDA"
-      ? unidadesMedida
-      : formType === "HISTORIAL"
-      ? historial
-      : []
-  )
-    .filter((item) => {
-      if (
-        formType === "INGRESO" ||
-        formType === "DESPACHO" ||
-        formType === "SERVICIOS" 
-        
-      ) {
+  const filteredData = (formType === "Cliente" ? clientes :
+    formType === "Proveedor" ? proveedores :
+      formType === "Tercero" ? terceros :
+        formType === "Producto" ? productos :
+          formType === "Vehiculo" ? vehiculos.map(vehiculo => ({
+            ...vehiculo,
+            nombre_conductor: conductores.find(conductor => conductor.id_conductor === vehiculo.vehi_idconductor)?.nombre_conductor || ''
+          })) :
+            formType === "Conductor" ? conductores :
+              formType === "Ingreso" ? ingresos :
+                formType === "Despacho" ? despachos :
+                  formType === "Servicios" ? servicios :
+                    formType === "Trailer" ? trailers :
+                      formType === "Origen" ? origenes :
+                        formType === "Destino" ? destinos :
+                          formType === "Patio" ? patios :
+                            formType === "Comprador" ? compradores :
+                              formType === "Transportadora" ? transportadoras :
+                                formType === "Varios" ? varios :
+                                  formType === "Factura" ? facturas : [])
+    .filter(item => {
+      if (formType === "Ingreso" || formType === "Despacho" || formType === "Servicios") {
         return item.tipo.toUpperCase() === formType.toUpperCase();
       }
       return true;
     })
-    .filter((item) => {
+    .filter(item => {
       if (searchQuery === "") return true;
-      return Object.values(item).some(
-        (val) =>
-          val &&
-          val.toString().toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      return Object.values(item).some(val => val && val.toString().toLowerCase().includes(searchQuery.toLowerCase()));
     })
-   
+    .filter(item => {
+      const fSalida = item.fSalida ? moment(item.fSalida, "YYYY-MM-DD") : null;
+      const startDateValid = startDate === "" || (fSalida && fSalida.isSameOrAfter(moment(startDate, "YYYY-MM-DD")));
+      const endDateValid = endDate === "" || (fSalida && fSalida.isSameOrBefore(moment(endDate, "YYYY-MM-DD")));
+      return startDateValid && endDateValid;
+    });
+
+  // Usamos useMemo para calcular el total de "peso neto" a partir de los datos filtrados.
+  // Se suma la propiedad "pesoNeto" de cada registro, convirtiéndola a número.
   const totalPesoNeto = useMemo(() => {
     return filteredData.reduce((total, item) => {
-      const peso = parseFloat(item.peso_neto);
+      const peso = parseFloat(item.pesoNeto);
       return total + (isNaN(peso) ? 0 : peso);
     }, 0);
   }, [filteredData]);
 
-  const tablesWithAddButton = [
-    "CLIENTE",
-    "PROVEEDOR",
-    "PRODUCTO",
-    "VARIOS",
-    "TERCERO",
-    "VEHICULO",
-    "CONDUCTOR",
-    "ORIGEN",
-    "DESTINO",
-    "PATIO",
-    "COMPRADOR",
-    "TRANSPORTADORA",
-    "TRAILER",
-    "FACTURA",
-    "MEDIDA",
-  ];
+  const tablesWithAddButton = ["Cliente", "Proveedor", "Producto", "Varios", "Tercero", "Vehiculo", "Conductor", "Origen", "Destino", "Patio", "Comprador", "Transportadora", "Trailer", "Factura"];
 
   const handleFormTypeChange = (selectedOption) => {
     if (cancelTokenSource.current) {
-      cancelTokenSource.current.cancel(
-        "Operation canceled due to new request."
-      );
+      cancelTokenSource.current.cancel('Operation canceled due to new request.');
     }
     setFormType(selectedOption ? selectedOption.value : "");
-    console.log(
-      "Form Type selected:",
-      selectedOption ? selectedOption.value : ""
-    );
-    setSearchQuery(""); // Reset search query on form type change
-    setStartDate(""); // Reset start date
-    setEndDate(""); // Reset end date
+    console.log("Form Type selected:", selectedOption ? selectedOption.value : "");
+    setSearchQuery(''); // Reset search query on form type change
+    setStartDate(''); // Reset start date
+    setEndDate(''); // Reset end date
     setClientes([]);
     setProveedores([]);
     setTerceros([]);
@@ -766,30 +563,7 @@ function Consultas() {
     setCompradores([]);
     setTransportadoras([]);
     setFacturas([]);
- 
   };
-
- 
-  const calcularDiasParaBorrado = () => {
-    const hoy = moment();
-    const dia30EsteMes = moment().date(30);
-
-    const proximoBorrado = hoy.isAfter(dia30EsteMes)
-      ? moment().add(1, "month").date(30)
-      : dia30EsteMes;
-
-    const diasFaltantes = proximoBorrado.diff(hoy, "days");
-
-    let color = "bg-green-100 border-green-300 text-green-800";
-    if (diasFaltantes <= 7 && diasFaltantes > 3) {
-      color = "bg-yellow-100 border-yellow-300 text-yellow-800";
-    } else if (diasFaltantes <= 3) {
-      color = "bg-red-100 border-red-300 text-red-800";
-    }
-
-    return { diasFaltantes, color };
-  };
-
 
   return (
     <div className="h-screen font-montserrat bg-[#F2F2F2]">
@@ -822,26 +596,25 @@ function Consultas() {
                     </div>
                   </div>
                 </div>
-                {["INGRESO", "DESPACHO", "SERVICIOS", "HISTORIAL"].includes(formType) && (
-                  <div className="flex items-center space-x-1">
-                    <InputField
-                      label="Desde"
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                    <InputField
-                      label="Hasta"
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-       
-                  </div>
-                )}
+                <div className="flex items-center space-x-1">
+                  <InputField
+                    label="Desde"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    readOnly={!["Ingreso", "Despacho", "Servicios"].includes(formType)}
+                  />
+                  <InputField
+                    label="Hasta"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    readOnly={!["Ingreso", "Despacho", "Servicios"].includes(formType)}
+                  />
+                </div>
               </div>
             </div>
-            <div className="m-3 h-[73%] overflow-scroll text-xs">
+            <div className="m-3 h-[73%] overflow-scroll text-[9px]">
               <Table
                 columns={visibleColumns}
                 data={filteredData}
@@ -867,10 +640,11 @@ function Consultas() {
                 proveedores={proveedores}
                 terceros={terceros}
                 productos={productos}
+                productosEntrada={productosEntrada}
+                productosSalida={productosSalida}
+                productosEntradaSalida={productosEntradaSalida}
                 origenes={origenes}
                 destinos={destinos}
-                unidadesMedida={unidadesMedida}
-                setUnidaMedida={setUnidadesMedida}
                 patios={patios}
                 varios={varios}
                 transportadoras={transportadoras}
@@ -879,42 +653,35 @@ function Consultas() {
                 facturas={facturas}
                 compradores={compradores}
                 conductores={conductores}
+                unidadesMedida={unidadesMedida}
                 procesosProducto={procesosProducto}
-                onDoubleClickRow={handleDoubleClick}
+                onDoubleClickRow={handleDoubleClick}   
               />
             </div>
             <div className="flex justify-between mt-4">
               <div>
-                             
-                {formType === "HISTORIAL" && (() => {
-                  const { diasFaltantes, color } = calcularDiasParaBorrado();
-                  return (
-                    <div className={`mt-1 ml-1 px-2 py-[2px] border rounded text-xs ${color}`}>
-                      Los datos de historial se borrarán en <strong>{diasFaltantes}</strong> días.
-                    </div>
-                  );
-                })()}
                 {/* Se muestran el total de registros y la suma del peso neto */}
                 <h3 className="font-semibold max-xl:text-sm text-lg">
                   Resultados: {filteredData.length}
                 </h3>
-                {["INGRESO", "DESPACHO", "SERVICIOS"].includes(formType) && (
                 <h3 className="font-semibold max-xl:text-sm text-lg">
-                  Tonelaje: {totalPesoNeto}
+                  Tonelaje: {totalPesoNeto.toFixed(2)}
                 </h3>
-                
-                )}
-                
               </div>
-              <div className="flex items-center bg-[#182540] m-1 p-1 xl:w-1/4 text-white text-sm font-semibold rounded hover:bg-[#6D80A6] hover:text-[#f2f2f2] justify-between">
+              <div className="flex items-center bg-[#182540] m-2 p-2 xl:w-1/3 text-white font-bold rounded hover:bg-[#6D80A6] hover:text-[#f2f2f2] justify-between">
                 <span>Exportar</span>
                 <div className="flex">
-                  <button className="m-1 p-1" onClick={handleExport}>
-                    <img src={iconExcel} alt="Icon" className="w-5 h-5" />
+                  <button className="m-2 p-1" onClick={handleExport}>
+                    <img src={iconExcel} alt="Icon" className="w-6 h-6" />
+                  </button>
+                  <button className="m-2 p-1">
+                    <img src={iconTxt} alt="Icon" className="w-6 h-6" />
+                  </button>
+                  <button className="m-2 p-1">
+                    <img src={iconPdf} alt="Icon" className="w-6 h-6" />
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         </div>

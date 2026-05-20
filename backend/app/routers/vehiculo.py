@@ -5,7 +5,7 @@ from app.services.servicio_vehiculo import VehiculoService
 from app.config.database import get_db
 from fastapi.responses import StreamingResponse
 from  typing import Optional
-from app.core.core_auth import obtener_usuario, verificar_rol
+from app.core.security import obtener_usuario, verificar_rol
 
 router = APIRouter(
     prefix='/vehiculo',

@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import background1 from "../assets/acopio.jpg";
+import background2 from "../assets/carbon.jpg";
+import logo from "../assets/Logo.png";
 import { AiOutlineCloseCircle } from "react-icons/ai";
-const background1 = "/assets/acopio.jpg";
-const background2 = "/assets/carbon.jpg";
-const logo = "/assets/Logo.png";
-
 
 const Login = () => {
   const [credentials, setCredentials] = useState({

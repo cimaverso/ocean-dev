@@ -7,7 +7,7 @@ from app.models.registro.entidad.modelo_entidad import EntidadResponse, EntidadC
 from app.services.servicio_entidad import EntidadService
 from app.config.database import get_db
 from typing import Optional
-from app.core.core_auth import obtener_usuario, verificar_rol
+from app.core.security import obtener_usuario, verificar_rol
 
 router = APIRouter(
     prefix='/entidad',

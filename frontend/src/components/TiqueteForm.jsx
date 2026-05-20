@@ -1,88 +1,445 @@
 import React, { useState, useEffect, useRef } from "react";
 import moment from "moment-timezone";
+import axios from "axios";
 import SelectField from "./Layouts/SelectField";
 import FormSection from "./FormSection";
 import IngresoForm from "./IngresoForm";
 import DespachoForm from "./DespachoForm";
 import ServiciosForm from "./ServiciosForm";
 import InputField from "./Layouts/InputField";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Notification from "./Layouts/Notificacion";
+import { useAuth } from "../context/AuthContext";
 import { CursorArrowRaysIcon } from "@heroicons/react/24/solid";
-import axios from "axios";
-
 
 const TiqueteForm = ({ formType: initialFormType, initialData }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-
+  const [ticketNumber, setTicketNumber] = useState(initialData.registro);
+  const [ticketNumberFinal, setTicketNumberFinal] = useState(
+    initialData.tiquete
+  );
   const [formType, setFormType] = useState(
     location.state?.formType || initialFormType
   );
   const [vehicleInfo, setVehicleInfo] = useState({
-    vehiculo: initialData.vehiculo_placa || "",
-    id: initialData.vehiculo_id || null,
+    placa: initialData.placa || "",
   });
   const [trailerInfo, setTrailerInfo] = useState({
-    trailer: initialData.trailer_placa || "",
-    id: initialData.trailer_id || null,
+    trailer: initialData.trailer || "",
+    trai_id: initialData.trai_id || null,
   });
   const [facturaInfo, setFacturaInfo] = useState({
-    factura: initialData.factura_fecha || "",
-    id: initialData.factura_id || null,
-  });
-  const [conductInfo, setConductInfo] = useState({
-    conductor: initialData.conductor_nombre || "",
-    cedula: initialData.conductor_cedula || "",
-    id: initialData.conductor_id || null,
-  });
-  const [peso, setPeso] = useState({
-    tara: initialData.peso_tara || "",
-    bruto: initialData.peso_bruto || "",
-    neto: initialData.peso_neto || "",
+    numero_factura: initialData.numero_factura || "",
+    fac_id: initialData.fac_id || null,
   });
 
+  const [conductInfo, setConductInfo] = useState({
+    conductor: initialData.conductor || "",
+    cedulaConductor: initialData.cedulaConductor || "",
+    conduct_id: initialData.conduct_id || null,
+  });
+
+  const [peso, setPeso] = useState({
+    tara: initialData.pesoTara || "",
+    bruto: initialData.pesoBruto || "",
+    neto: initialData.pesoNeto || "",
+  });
+
+  const [facturaOptions, setFacturaOptions] = useState([]);
+  const [facturaSeleccionada, setFacturaSeleccionada] = useState("");
+  const [fechaSalida, setFechaSalida] = useState(initialData.fSalida || "");
+  const [horaSalida, setHoraSalida] = useState(initialData.hSalida || "");
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
-  const [isFinalizing] = useState(location.state?.isFinalizing || false);
-  const [isHistorial] = useState(location.state?.isHistorial || false);
-  const [isTiquete] = useState(location.state?.isTiquete || false);
-  const [isProcessing, setIsProcessing] = useState(false); // Nuevo estado para controlar el procesamiento
-  const [isTiqueteFinalizado, setIsTiqueteFinalizado] = useState(false);
-  const [notification, setNotification] = useState({ message: "", type: "" });
-  const [showAlertaSalir, setShowAlertaSalir] = useState(false);
-
-  const [consecutivo, setConsecutivo] = useState(initialData.consecutivo || "");
-  const [consecutivoTiquete, setConsecutivoTiquete] = useState(initialData.consecutivo_tiquete || "");
-
-
+  const [productos, setProductos] = useState([]);
+  const [servicios, setServicios] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
+  const [terceros, setTerceros] = useState([]);
+  const [placa, setPlaca] = useState([]);
+  const [compradores, setCompradores] = useState([]);
+  const [transportadoras, setTransportadoras] = useState([]);
+  const [destinos, setDestinos] = useState([]);
+  const [origenes, setOrigenes] = useState([]);
+  const [unidades, setUnidades] = useState([]);
   const [observaciones, setObservaciones] = useState(
     initialData.observaciones || ""
   );
-  const [fechaEntrada, setFechaEntrada] = useState(
-    initialData.fecha_entrada || ""
+  const [cantidad, setCantidad] = useState([]);
+  const [isFinalizing, setIsFinalizing] = useState(
+    location.state?.isFinalizing || false
   );
-  const [horaEntrada, setHoraEntrada] = useState(
-    initialData.hora_entrada || ""
+  const [isHistorial, setIsHistorial] = useState(
+    location.state?.isHistorial || false
   );
-  const [fechaSalida, setFechaSalida] = useState(
-    initialData.fecha_salida || ""
+  const [isTiquete, setIsTiquete] = useState(
+    location.state?.isTiquete || false
   );
-  const [horaSalida, setHoraSalida] = useState(
-    initialData.hora_salida || ""
-  );
+  const [patios, setPatios] = useState([]);
+  const [notification, setNotification] = useState({ message: "", type: "" });
+  const [isProcessing, setIsProcessing] = useState(false); // Nuevo estado para controlar el procesamiento
+  const [isTiqueteFinalizado, setIsTiqueteFinalizado] = useState(false);
+  const navigate = useNavigate();
+  const { getToken, userId } = useAuth();
+  const [fechaEntrada, setFechaEntrada] = useState(initialData.fEntrada || "");
+  const [horaEntrada, setHoraEntrada] = useState(initialData.hEntrada || "");
 
   //CAMBIOS
   const [vehicleOptions, setVehicleOptions] = useState([]); // Nuevo estado
   const [conductorOptions, setConductorOptions] = useState([]); // Nuevo estado
   const [cedulaOptions, setCedulaOptions] = useState([]);
   const [trailerOptions, setTrailerOptions] = useState([]);
-  const [facturaOptions, setFacturaOptions] = useState([]);
-
 
   const ingresoFormRef = useRef();
   const despachoFormRef = useRef();
   const servicioFormRef = useRef();
+
+  const [registroId, setRegistroId] = useState(null);
+  // Usamos useRef para rastrear si el registro ya se creó
+  const registroCreadoRef = useRef(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const incluirInactivos =
+          isFinalizing || isHistorial || isTiquete ? "true" : "false";
+
+        if (
+          (formType === "INGRESO" ||
+            formType === "DESPACHO" ||
+            formType === "SERVICIOS") &&
+          !ticketNumber &&
+          !isFinalizing &&
+          !isHistorial
+        ) {
+          const { data } = await axios.get(
+            "http://127.0.0.1:5000/obtener_proximo_id"
+          );
+
+          setTicketNumber(data.proximo_id_registro);
+          setTicketNumberFinal(data.proximo_id_tiquete);
+
+          // Paso 2: Crear el registro si aún no se ha creado
+          if (!registroCreadoRef.current) {
+            try {
+              const response = await axios.post(
+                "http://127.0.0.1:5000/crear_registro",
+                {
+                  tipo_id:
+                    formType === "INGRESO"
+                      ? 1
+                      : formType === "DESPACHO"
+                      ? 2
+                      : 3,
+                  fecha_entrada: new Date().toISOString().split("T")[0],
+                  hora_entrada: new Date().toLocaleTimeString("en-US", {
+                    hour12: false,
+                  }),
+                }
+              );
+
+              setTicketNumber(response.data.id); // Asegurar que el ID guardado es el mismo que se muestra
+              registroCreadoRef.current = true; // Marcar como creado
+              console.log(`Registro creado con ID: ${response.data.id}`);
+            } catch (error) {
+              console.error("Error al crear el registro:", error);
+            }
+          }
+        }
+
+        if (formType === "INGRESO") {
+          const [
+            productosEntradaData,
+            productosESData,
+            proveedoresData,
+            patiosData,
+            compradoresData,
+            destinosData,
+            origenesData,
+          ] = await Promise.all([
+            axios.get(
+              `http://127.0.0.1:5000/productos_entrada?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get(
+              `http://127.0.0.1:5000/productos_entrada_salida?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get(
+              `http://127.0.0.1:5000/proveedores?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get("http://127.0.0.1:5000/patios"),
+            axios.get("http://127.0.0.1:5000/compradores"),
+            axios.get("http://127.0.0.1:5000/destinos"),
+            axios.get("http://127.0.0.1:5000/origenes"),
+          ]);
+
+          const productosCombinados = [
+            ...productosEntradaData.data,
+            ...productosESData.data,
+          ];
+          setProductos(productosCombinados);
+          setProveedores(proveedoresData.data);
+          setCompradores(compradoresData.data);
+          setPatios(patiosData.data);
+          setDestinos(destinosData.data);
+          setOrigenes(origenesData.data);
+        } else if (formType === "DESPACHO") {
+          const [
+            clientesData,
+            productosSalidaData,
+            productosESData,
+            transportadorasData,
+            patiosData,
+            origenesData,
+            destinosData,
+          ] = await Promise.all([
+            axios.get(
+              `http://127.0.0.1:5000/clientes?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get(
+              `http://127.0.0.1:5000/productos_salida?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get(
+              `http://127.0.0.1:5000/productos_entrada_salida?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get("http://127.0.0.1:5000/transportadoras"),
+            axios.get("http://127.0.0.1:5000/patios"),
+            axios.get("http://127.0.0.1:5000/origenes"),
+            axios.get("http://127.0.0.1:5000/destinos"),
+          ]);
+
+          const productosCombinados = [
+            ...productosSalidaData.data,
+            ...productosESData.data,
+          ];
+          setClientes(clientesData.data);
+          setProductos(productosCombinados);
+          setTransportadoras(transportadorasData.data);
+          setPatios(patiosData.data);
+          setDestinos(destinosData.data);
+          setOrigenes(origenesData.data);
+        } else if (formType === "SERVICIOS") {
+          const [
+            tercerosData,
+            compradoresData,
+            serviciosData,
+            patiosData,
+            origenesData,
+            unidadesData,
+          ] = await Promise.all([
+            axios.get(
+              `http://127.0.0.1:5000/terceros?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get("http://127.0.0.1:5000/compradores"),
+            axios.get(
+              `http://127.0.0.1:5000/servicios?incluir_inactivos=${incluirInactivos}`
+            ),
+            axios.get("http://127.0.0.1:5000/patios"),
+            axios.get("http://127.0.0.1:5000/origenes"),
+            axios.get("http://127.0.0.1:5000/unidades"),
+          ]);
+
+          setTerceros(tercerosData.data);
+          setCompradores(compradoresData.data);
+          setServicios(serviciosData.data);
+          setPatios(patiosData.data);
+          setOrigenes(origenesData.data);
+          setUnidades(unidadesData.data);
+        }
+      } catch (error) {
+        setNotification({
+          message: "Error fetching data: " + error.message,
+          type: "error",
+        });
+      }
+    };
+
+    fetchData();
+  }, [formType, isFinalizing, isHistorial, isTiquete]);
+
+  const cerrarRegistro = async () => {
+    try {
+      const token = await getToken();
+      await axios.post(
+        `http://127.0.0.1:5000/cerrar_registro/${ticketNumber}`,
+        { user_id: userId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Error al cerrar el registro:",
+        error.response?.data || error.message
+      );
+      setNotification({
+        message: "Error al cerrar el registro",
+        type: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const abrirRegistro = async () => {
+      try {
+        const token = await getToken();
+        const response = await axios.post(
+          `http://127.0.0.1:5000/abrir_registro/${ticketNumber}`,
+          { user_id: userId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (
+          response.data.message ===
+          "El registro ya está abierto por este usuario"
+        ) {
+          setNotification({
+            message: "El registro ya está abierto por ti.",
+            type: "info",
+          });
+        } else {
+          setNotification({
+            message: "Registro abierto exitosamente.",
+            type: "success",
+          });
+        }
+      } catch (error) {
+        if (error.response?.status === 400) {
+          setNotification({
+            message:
+              error.response?.data?.error || "El registro ya está ocupado.",
+            type: "error",
+          });
+
+          // Esperar 3 segundos (3000ms) antes de redirigir
+          setTimeout(() => {
+            navigate("/registro");
+          }, 3000);
+        } else {
+          setNotification({
+            message: "Error al abrir el registro.",
+            type: "error",
+          });
+
+          // Esperar 3 segundos antes de redirigir
+          setTimeout(() => {
+            navigate("/registro");
+          }, 2000);
+        }
+      }
+    };
+
+    if (isFinalizing) {
+      abrirRegistro();
+    }
+
+    return () => {
+      if (ticketNumber) {
+        cerrarRegistro();
+      } else {
+        console.log("No se puede cerrar el regstro porque es undefinied");
+      }
+    };
+  }, [isFinalizing, ticketNumber, userId]);
+
+  const cerrarTiquete = async () => {
+    try {
+      const token = await getToken();
+
+      await axios.post(
+        `http://127.0.0.1:5000/cerrar_tiquete/${ticketNumberFinal}`,
+        { user_id: userId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Error al cerrar el registro:",
+        error.response?.data || error.message
+      );
+      setNotification({
+        message: "Error al cerrar el registro",
+        type: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const abrirTiquete = async () => {
+      try {
+        console.log("usuario", userId);
+        console.log("Tiquete ID", ticketNumberFinal);
+        const token = await getToken();
+        const response = await axios.post(
+          `http://127.0.0.1:5000/abrir_tiquete/${ticketNumberFinal}`,
+          { user_id: userId },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (
+          response.data.message ===
+          "El Tiqeute ya está abierto por este usuario"
+        ) {
+          setNotification({
+            message: "El tiquete ya está abierto por ti.",
+            type: "info",
+          });
+        } else {
+          setNotification({
+            message: "Tiquete abierto exitosamente.",
+            type: "success",
+          });
+        }
+      } catch (error) {
+        if (error.response?.status === 400) {
+          setNotification({
+            message:
+              error.response?.data?.error || "El tiquete ya está ocupado.",
+            type: "error",
+          });
+
+          // Esperar 3 segundos (3000ms) antes de redirigir
+          setTimeout(() => {
+            navigate("/registro");
+          }, 3000);
+        } else {
+          setNotification({
+            message: "Error al abrir el tiquete.",
+            type: "error",
+          });
+
+          // Esperar 3 segundos antes de redirigir
+          setTimeout(() => {
+            navigate("/registro");
+          }, 2000);
+        }
+      }
+    };
+
+    if (isHistorial || isTiquete) {
+      abrirTiquete();
+    }
+
+    return () => {
+      if (ticketNumberFinal) {
+        cerrarTiquete();
+      } else {
+        console.log("No se peude cerrar el tiquete porque es undefined");
+      }
+    };
+  }, [isHistorial, isTiquete, ticketNumberFinal, userId]);
 
   useEffect(() => {
     const now = moment().tz("America/Bogota");
@@ -90,175 +447,76 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
     setCurrentTime(now.format("HH:mm"));
   }, []);
 
-  useEffect(() => {
-    const fetchConsecutivo = async () => {
-      const token = sessionStorage.getItem('token');
-
-      if (
-        (formType === "INGRESO" ||
-          formType === "DESPACHO" ||
-          formType === "SERVICIOS") &&
-        !consecutivo &&
-        !isFinalizing &&
-        !isHistorial
-      ) {
-        const registro = await axios.get("https://ocean-syt-production.up.railway.app/registro/consecutivo", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("CONSECUTIVO REGISTRO AMERICANO ###", registro.data);
-        setConsecutivo(registro.data.proximo_id);
-      }
-    };
-
-    fetchConsecutivo();
-  }, [formType, isFinalizing, isHistorial]);
-
-  useEffect(() => {
-    const fetchTiquete = async () => {
-      const token = sessionStorage.getItem('token');
-
-      if (
-        (formType === "INGRESO" ||
-          formType === "DESPACHO" ||
-          formType === "SERVICIOS") &&
-        !consecutivoTiquete &&
-        (isFinalizing || isTiquete || isHistorial)
-      ) {
-        const tiquete = await axios.get("https://ocean-syt-production.up.railway.app/registro/tiquete", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log("CONSECUTIVO DE TIQUETE #####", tiquete.data);
-        setConsecutivoTiquete(tiquete.data.proximo_id_tiquete);
-      }
-    };
-
-    fetchTiquete();
-  }, [formType, isFinalizing, isTiquete, isHistorial]);
-
-  
   const fetchVehiculos = async () => {
-    const token = sessionStorage.getItem("token");
-    
     try {
-      const response = await axios.get("https://ocean-syt-production.up.railway.app/vehiculo/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-      );
-
-      // Guarda todos los datos completos en options
+      const response = await axios.get("http://localhost:5000/vehiculos");
       return response.data.map((vehiculo) => ({
-        value: vehiculo.vehi_id,
-        label: vehiculo.vehi_placa,
+        value: vehiculo.placa,
+        label: vehiculo.placa,
       }));
     } catch (error) {
       console.error("Error fetching vehicle options:", error);
       return [];
     }
   };
-
   const fetchTrailers = async () => {
-    const token = sessionStorage.getItem("token");
-   
     try {
-      const response = await axios.get("https://ocean-syt-production.up.railway.app/trailer/", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await axios.get("http://localhost:5000/trailers");
       return response.data.map((trailer) => ({
-        value: trailer.trai_id,
-        label: trailer.trai_placa,
+        value: trailer.trailer,
+        label: trailer.trailer,
       }));
     } catch (error) {
       console.error("Error fetching trailer options:", error);
       return [];
     }
   };
-
-  const fetchFacturas = async () => {
-    const token = sessionStorage.getItem("token");
-    
+  const fetchConductores = async () => {
     try {
-      const response = await axios.get("https://ocean-syt-production.up.railway.app/factura/", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get("http://localhost:5000/conductores");
+      console.log("Conductores recibidos:", response.data);
+      return response.data.map((conductor) => ({
+        value: conductor.nombre_conductor, // Almacena el ID del conductor
+        label: conductor.nombre_conductor, // Almacena el nombre del conductor
+      }));
+    } catch (error) {
+      console.error("Error fetching conductor options:", error);
+      return [];
+    }
+  };
+  const fetchConductorCedula = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/conductores");
+      console.log("Conductores recibidos:", response.data);
+      return response.data.map((cedula) => ({
+        value: cedula.cedula_conductor, // Almacena el ID del conductor
+        label: cedula.cedula_conductor, // Almacena el nombre del conductor
+      }));
+    } catch (error) {
+      console.error("Error fetching conductor options:", error);
+      return [];
+    }
+  };
+  const fetchFacturas = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:5000/facturas");
+      console.log("Factura recibida", response.data);
 
       return response.data.map((factura) => ({
-        value: factura.fac_id,
-        label: factura.fac_fecha,
+        value: factura.id_factura,
+        label: factura.numero_factura,
       }));
     } catch (error) {
-      console.error("Error fetching factura options:", error);
-      return [];
+      console.log("Error al buscar facturas", error);
+      setFacturaOptions([]);
     }
-  };
-
-  const fetchConductores = async () => {
-    const token = sessionStorage.getItem("token");
-    
-    try {
-      const response = await axios.get("https://ocean-syt-production.up.railway.app/conductor/", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.data.map((conductor) => ({
-        value: conductor.conduct_id, // Almacena el ID del conductor
-        label: conductor.conduct_nombre, // Almacena el nombre del conductor
-      }));
-    } catch (error) {
-      console.error("Error fetching conductor options:", error);
-      return [];
-    }
-  };
-
-  const fetchConductorCedula = async () => {
-    const token = sessionStorage.getItem("token");
-   
-    try {
-      const response = await axios.get("https://ocean-syt-production.up.railway.app/conductor/", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.data.map((conductor) => ({
-        value: conductor.conduct_id, // Almacena el ID del conductor
-        label: conductor.conduct_cedula, // Almacena el nombre del conductor
-      }));
-    } catch (error) {
-      console.error("Error fetching conductor options:", error);
-      return [];
-    }
-  };
-
-  const refreshOptions = async () => {
-    const nuevoVehiculo = await fetchVehiculos();
-    const nuevoTrailer = await fetchTrailers();
-    const nuevoConductorCedula = await fetchConductorCedula();
-    const nuevoConductor = await fetchConductores()
-    const nuevaFactura = await fetchFacturas();
- 
-    setVehicleOptions(nuevoVehiculo);
-    setTrailerOptions(nuevoTrailer);
-    setConductorOptions(nuevoConductor);
-    setCedulaOptions(nuevoConductorCedula);
-    setFacturaOptions(nuevaFactura);
-
-
   };
 
   useEffect(() => {
     const fetchOptions = async () => {
+      const facturas = await fetchFacturas();
       const vehiculos = await fetchVehiculos();
       const trailers = await fetchTrailers();
-      const facturas = await fetchFacturas();
       const conductores = await fetchConductores();
       const cedulaConductor = await fetchConductorCedula();
 
@@ -267,52 +525,133 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
       setTrailerOptions(trailers);
       setConductorOptions(conductores);
       setCedulaOptions(cedulaConductor);
+      console.log("Opciones de conductores actualizadas:", conductores); // Agrega este log
     };
 
     fetchOptions();
   }, []);
 
-  const handlePlacaChange = (selectedOption) => {
-    if (selectedOption) {
-      setVehicleInfo({
-        vehiculo: selectedOption.label, // la placa
-        id: selectedOption.value, // el ID que ya viene en selectedOption
-      });
-    } else {
-      setNotification({ message: "Vehículo no encontrado", type: "error" });
+  const handlePlacaChange = async (selectedOption) => {
+    const placa = selectedOption.value;
+    try {
+      const { data } = await axios.get(
+        `http://localhost:5000/vehiculo?vehi_placa=${placa}`
+      );
+      console.log("placa id", data.id_vehiculo);
+      setVehicleInfo((prevState) => ({
+        ...prevState,
+        placa: placa,
+
+        vehi_id: data.id_vehiculo,
+      }));
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setNotification({ message: "Vehículo no encontrado", type: "error" });
+      } else {
+        setNotification({
+          message: "Error fetching vehicle info",
+          type: "error",
+        });
+      }
     }
   };
 
-  const handleTrailerChange = (selectedOption) => {
-    if (selectedOption) {
-      setTrailerInfo({
-        trailer: selectedOption.label, // la placa
-        id: selectedOption.value, // el ID que ya viene en selectedOption
-      });
-    } else {
-      setNotification({ message: "Trailer no encontrado", type: "error" });
+  const handleTrailerChange = async (selectedOption) => {
+    const trailer = selectedOption.value;
+    try {
+      const { data } = await axios.get(
+        `http://localhost:5000/trailer?trai_trailer=${trailer}`
+      );
+
+      setTrailerInfo((prevState) => ({
+        ...prevState,
+        trailer: trailer,
+        trai_id: data.id_trailer,
+      }));
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setNotification({ message: "Vehículo no encontrado", type: "error" });
+      } else {
+        setNotification({
+          message: "Error fetching vehicle info",
+          type: "error",
+        });
+      }
     }
   };
 
-  const handleFacturaChange = (selectedOption) => {
-    if (selectedOption) {
-      setFacturaInfo({
-        factura: selectedOption.label,
-        id: selectedOption.value,
-      });
-    } else {
-      setNotification({ message: "Factura no encontrada", type: "error" });
+  const handleConductorChange = async (selectedOption) => {
+    const conductor = selectedOption.value;
+    try {
+      const { data } = await axios.get(
+        `http://localhost:5000/conductor?conduct_nombre=${conductor}`
+      );
+      setConductInfo((prevState) => ({
+        ...prevState,
+        conductor: conductor,
+        cedulaConductor: data.cedula_conductor || "",
+        conduct_id: data.id_conductor,
+      }));
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setNotification({ message: "Conductor no encontrado", type: "error" });
+      } else {
+        setNotification({
+          message: "Error fetching vehicle info",
+          type: "error",
+        });
+      }
     }
   };
 
-  const handleConductorChange = (selectedOption) => {
-    if (selectedOption) {
-      setConductInfo({
-        conductor: selectedOption.label, // la placa
-        id: selectedOption.value, // el ID que ya viene en selectedOption
-      });
-    } else {
-      setNotification({ message: "Factura no encontrado", type: "error" });
+  const handleCedulaChange = async (selectedOption) => {
+    const cedula = selectedOption.value;
+    try {
+      const { data } = await axios.get(
+        `http://localhost:5000/conductor?conduct_cedula=${cedula}`
+      );
+      setConductInfo((prevState) => ({
+        ...prevState,
+        conductor: data.nombre_conductor || "",
+        cedulaConductor: cedula,
+        conduct_id: data.id_conductor,
+      }));
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setNotification({ message: "Conductor no encontrado", type: "error" });
+      } else {
+        setNotification({
+          message: "Error fetching conductor info",
+          type: "error",
+        });
+      }
+    }
+  };
+
+  const handleFacturaChange = async (selectedOption) => {
+    const factura_id = selectedOption.value; // Asegúrate de enviar el ID
+    console.log("Factura seleccionada - ID:", factura_id);
+
+    try {
+      const { data } = await axios.get(
+        `http://localhost:5000/factura?numero_factura=${factura_id}` // Enviar ID en lugar de fecha
+      );
+      setFacturaInfo((prevState) => ({
+        ...prevState,
+        numero_factura: data.numero_factura || "",
+        fac_id: data.id_factura,
+      }));
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.log("Factura no encontrada");
+        setNotification({ message: "Factura no encontrada", type: "error" });
+      } else {
+        console.log("Error en la solicitud:", error);
+        setNotification({
+          message: "Error fetching factura info",
+          type: "error",
+        });
+      }
     }
   };
 
@@ -342,110 +681,152 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
     }));
   };
 
+  const handleObservacionesChange = (e) => {
+    setObservaciones(e.target.value);
+  };
+
   const handleSubmitRegistro = async (registroData, tipoId) => {
-    const token = sessionStorage.getItem("token");
+    const currentVehiId = vehicleInfo.vehi_id;
+    const currentConductId = conductInfo.conduct_id;
+    const currentTraiId = trailerInfo.trai_id;
+    const currentFacturaId = facturaInfo.fac_id;
+
+    console.log("IDa mandar:", currentFacturaId);
+
     try {
-    
-      await axios.post(
-        "https://ocean-syt-production.up.railway.app/registro/",
+      await axios.put(
+        `http://127.0.0.1:5000/procesar_registro/${ticketNumber}`,
         {
           ...registroData,
-          reg_idtipo: tipoId, // Ahora usamos reg_idtipo como lo espera el backend
-          reg_fechaentrada: currentDate,
-          reg_horaentrada: currentTime,
-          reg_pesobruto:
+          tipo_id: tipoId, // Este valor ya no es necesario actualizar en el registro existente
+          peso_bruto:
             formType === "INGRESO" || formType === "SERVICIOS"
               ? peso.bruto
               : null,
-          reg_pesotara: formType === "DESPACHO" ? peso.tara : null,
-          reg_idvehiculo: vehicleInfo.id,
-          reg_idtrailer: trailerInfo.id,
-          reg_idconductor: conductInfo.id,
-          reg_idfactura: facturaInfo.id,
-          reg_observaciones: observaciones,
-          reg_consecutivo: consecutivo,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          peso_tara: formType === "DESPACHO" ? peso.tara : null,
+          vehi_id: currentVehiId,
+          trai_id: currentTraiId,
+          conduct_id: currentConductId,
+          observaciones: observaciones,
+          id_factura: currentFacturaId,
         }
-        
-      );
-      setNotification({message: "Registro procesado exitosamente",type: "success",});
-    } catch (error) {
-      setNotification({message:"Error procesando registro: " +(error.response ? error.response.data.error : error.message),type: "error",});
-    }
-  };
-  
-  const handleActualizarRegistro = async (finalizarData) => {
-    const reg_id = initialData.registro_id;
-    const token = sessionStorage.getItem("token");
-    
-    const isFinalizing = location.state?.isFinalizing || false; // Revisar si estamos finalizando
-    try {
-      await axios.put(
-        `https://ocean-syt-production.up.railway.app/registro/${reg_id}`, // ← comillas invertidas correctas
-        {
-          ...finalizarData,
-          reg_fechaentrada: fechaEntrada || initialData.fecha_entrada,
-          reg_horaentrada: horaEntrada || initialData.hora_entrada,
-          reg_fechasalida: isFinalizing ? currentDate : initialData.fecha_salida,
-          reg_horasalida: isFinalizing ? currentTime : initialData.hora_salida,
-          reg_pesotara: peso.tara,
-          reg_pesobruto: peso.bruto,
-          reg_pesoneto: peso.neto,
-          reg_observaciones: observaciones || "",
-          reg_idvehiculo: vehicleInfo.id || null,
-          reg_idconductor: conductInfo.id || null,
-          reg_idtrailer: trailerInfo.id || null,
-          reg_idfactura: facturaInfo.id || null,
-          ...(isFinalizing && { reg_tiquete: consecutivoTiquete }),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-        
       );
 
-      if (isFinalizing) {
-        setIsTiqueteFinalizado(true);
-        setNotification({
-          message: "Tiquete finalizado exitosamente",
-          type: "success",
-        });
-      } else {
-        setNotification({
-          message: "Registro actualizado exitosamente",
-          type: "success",
-        });
-      }
+      setNotification({
+        message: "Registro procesado exitosamente",
+        type: "success",
+      });
     } catch (error) {
-      console.error("Error al finalizar tiquete:", error);
       setNotification({
         message:
-          "Error finalizando tiquete: " +
-          (error.response?.data?.message || error.message),
+          "Error procesando registro: " +
+          (error.response ? error.response.data.error : error.message),
+        type: "error",
+      });
+    }
+  };
+
+  const handleFinalizarTiquete = async (finalizarData) => {
+    const currentVehiId = vehicleInfo.vehi_id;
+    const currentConductId = conductInfo.conduct_id;
+    const currentTraiId = trailerInfo.trai_id;
+    const currentFacturaId = facturaInfo.fac_id;
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:5000/guardar_tiquete",
+        {
+          ...finalizarData,
+          fecha_entrada: fechaEntrada || initialData.fEntrada,
+          hora_entrada: horaEntrada || initialData.hEntrada,
+          fecha_salida: fechaSalida || currentDate,
+          hora_salida: horaSalida || currentTime,
+          peso_tara: peso.tara,
+          peso_bruto: peso.bruto,
+          peso_neto: peso.neto,
+          observaciones: observaciones,
+          id_registro: initialData.id_registro,
+          vehi_id: currentVehiId, // Puede ser nulo si no se seleccionó
+          conduct_id: currentConductId, // Puede ser nulo si no se seleccionó
+          trai_id: currentTraiId,
+          tipo: initialData.tipo,
+          id_factura: currentFacturaId,
+        }
+      );
+
+      const tiqueteId = response.data.tiquete_id; // Obtén el ID del tiquete
+      setTicketNumberFinal(tiqueteId); // Actualiza ticketNumber con el ID del tiquete
+      setIsTiqueteFinalizado(true); // Marca que el tiquete ha sido finalizado
+      setNotification({
+        message: "Tiquete guardado exitosamente",
+        type: "success",
+      });
+    } catch (error) {
+      setNotification({
+        message:
+          "Error guardando tiquete: " +
+          (error.response ? error.response.data.message : error.message),
+        type: "error",
+      });
+    }
+  };
+
+  const handleActualizarTiquete = async (actualizarData) => {
+    const currentVehiId = vehicleInfo.vehi_id;
+    const currentConductId = conductInfo.conduct_id;
+    const currentTraiId = trailerInfo.trai_id;
+    const currentFacturaId = facturaInfo.fac_id;
+    try {
+      await axios.put(
+        `http://127.0.0.1:5000/actualizar_tiquete/${ticketNumberFinal}`,
+        {
+          ...actualizarData,
+          fecha_entrada: fechaEntrada, // Use the user-provided date
+          hora_entrada: horaEntrada, // Use the user-provided time
+          fecha_salida: fechaSalida, // Use the user-provided date
+          hora_salida: horaSalida, // Use the user-provided time
+          pesoTara: peso.tara,
+          pesoBruto: peso.bruto,
+          pesoNeto: peso.neto,
+          placa: vehicleInfo.placa,
+          observaciones: observaciones,
+          id_registro: initialData.id_registro,
+          vehi_id: currentVehiId, // Puede ser nulo si no se seleccionó
+          conduct_id: currentConductId, // Puede ser nulo si no se seleccionó
+          trai_id: currentTraiId,
+          tipo: initialData.tipo,
+          id_factura: currentFacturaId,
+        }
+      );
+      setNotification({
+        message: "Tiquete actualizado exitosamente",
+        type: "success",
+      });
+    } catch (error) {
+      setNotification({
+        message:
+          "Error actualizando tiquete: " +
+          (error.response ? error.response.data.error : error.message),
         type: "error",
       });
     }
   };
 
   const handleImprimirTiquete = async () => {
-    const token = sessionStorage.getItem("token");
-    const reg_id = initialData.registro_id;
     try {
-     
+      let token = await getToken();
+      if (!token) {
+        throw new Error(
+          "No se encontró el token. Debe iniciar sesión nuevamente."
+        );
+      }
+
       const response = await axios.get(
-        `https://ocean-syt-production.up.railway.app/registro/imprimir/${reg_id}`,
+        `http://127.0.0.1:5000/imprimir_tiquete?tiquete_id=${ticketNumberFinal}`,
         {
           responseType: "blob",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          
         }
       );
 
@@ -497,7 +878,7 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
   const handleProcesar = async () => {
     if (isProcessing) return; // Evitar procesar si ya se está procesando
 
-    if (!vehicleInfo.vehiculo || !conductInfo.conductor) {
+    if (!vehicleInfo.placa || !conductInfo.conductor) {
       setNotification({
         message:
           "Por favor complete los campos obligatorios: Placa, Conductor ",
@@ -521,6 +902,30 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
     }
   };
 
+  const handleFinalizar = async () => {
+    if (isProcessing) return;
+
+    setIsProcessing(true);
+
+    try {
+      let data = {};
+
+      if (formType === "SERVICIOS" && servicioFormRef.current) {
+        data = servicioFormRef.current.getFormData();
+      } else if (formType === "INGRESO" && ingresoFormRef.current) {
+        data = ingresoFormRef.current.getFormData();
+      } else if (formType === "DESPACHO" && despachoFormRef.current) {
+        data = despachoFormRef.current.getFormData();
+      }
+
+      await cerrarRegistro();
+
+      await handleFinalizarTiquete(data);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleActualizar = async () => {
     if (isProcessing) return;
 
@@ -537,10 +942,9 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
         data = despachoFormRef.current.getFormData();
       }
 
-      
+      await cerrarTiquete();
 
-      await handleActualizarRegistro(data);
-      await cerrarRegistro();
+      await handleActualizarTiquete(data);
     } finally {
       setIsProcessing(false);
     }
@@ -555,7 +959,10 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
 
   const handleFormTypeChange = (selectedOption) => {
     setFormType(selectedOption ? selectedOption.value : "");
-    
+    console.log(
+      "Form Type selected:",
+      selectedOption ? selectedOption.value : ""
+    );
   };
 
   const handleFetchPesoTara = async () => {
@@ -582,44 +989,6 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
     }
   };
 
-  const cerrarRegistro = async () => {
-    const token = sessionStorage.getItem('token');
-    const reg_id = initialData.registro_id;
-
-    try {
-      await axios.put(
-        `https://ocean-syt-production.up.railway.app/registro/cerrar/${reg_id}`,
-        {}, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    } catch (error) {
-      setNotification({ message: 'Error al cerrar el registro', type: 'error' });
-    }
-  };
-
-  const handleSalir = async () => {
-    if (isHistorial || isTiquete || isFinalizing) {
-      await cerrarRegistro();
-      navigate("/registro")
-
-    } else {
-      setShowAlertaSalir(true); // Mostrar modal
-    }
-  };
-
-  const confirmarSalida = () => {
-    setShowAlertaSalir(false);
-    navigate("/registro");
-  };
-
-  const cancelarSalida = () => {
-    setShowAlertaSalir(false);
-  };
-
   return (
     <div className="mx-auto p-1 ">
       <div className="rounded p-1 ">
@@ -634,7 +1003,7 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
                 <>
                   <input
                     className="bg-white text-red-800 w-28 xl:w-3/4 text-sm 2xl:textlg text-center h-6 p-2 mr-3 focus:outline-none focus:ring-2 focus:[#6D80A6]"
-                    value={consecutivo}
+                    value={ticketNumber}
                     readOnly
                   />
 
@@ -644,14 +1013,14 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
 
                   <input
                     className="bg-white w-28 xl:w-3/4 text-sm 2xl:textlg text-center text-[#182540] h-6 px-1 focus:outline-none focus:ring-2 focus:[#6D80A6]"
-                    value={consecutivoTiquete}
+                    value={ticketNumberFinal}
                     readOnly
                   />
                 </>
               ) : (
                 <input
                   className="bg-white w-28 xl:w-3/4 text-base 2xl:textlg text-center text-[#182540] h-6 px-1 focus:outline-none focus:ring-2 focus:[#6D80A6]"
-                  value={consecutivo}
+                  value={ticketNumber}
                   readOnly
                 />
               )}
@@ -660,15 +1029,12 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
             <div className="col-span-2">
               {formType === "INGRESO" && (
                 <SelectField
+                  label="Facturado"
+                  id="formType"
                   options={facturaOptions}
+                  value={facturaInfo.fac_id}
                   onChange={handleFacturaChange}
-                  value={facturaInfo.id}
-                  apiUrl="https://ocean-syt-production.up.railway.app/factura/"
-                  fieldType="factura"
-                  showAddNew={true}
-                  onAfterSave={refreshOptions}
-                  className="appearance-none text-xs 2xl:text-base w-full h-7 border-2 border-[#6D80A6] rounded p-1 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#6D80A6]"
-                />
+                /> 
               )}
             </div>
             <div className="col-span-2">
@@ -684,55 +1050,48 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
           </div>
         </div>
         <FormSection title="Datos del Vehículo">
-          <div className="grid grid-cols-5">
+          <div className="grid grid-cols-6 gap-2 justify-center items-center ">
             {/* Placa */}
-            <div className="m-1 w-full">
-              <label className="text-xs 2xl:text-base font-bold m-1 block text-center">
+            <div className="m-1 w-full flex flex-col items-center">
+              <label className="text-xs 2xl:text-base font-bold m-1 text-center">
                 Placa
               </label>
-
               <SelectField
+                apiEndpoint='http://localhost:5000/vehiculos' 
+                postApiEndpoint="http://localhost:5000/crear_vehiculo"
                 options={vehicleOptions}
                 onChange={handlePlacaChange}
-                value={vehicleInfo.id}
-                apiUrl="https://ocean-syt-production.up.railway.app/vehiculo/"
-                fieldType="placa"
-                showAddNew={true}
-                onAfterSave={refreshOptions}
+                value={vehicleInfo.placa}
                 className="appearance-none text-xs 2xl:text-base w-full h-7 border-2 border-[#6D80A6] rounded p-1 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#6D80A6]"
               />
             </div>
 
             {/* Conductor (ocupa 2 columnas y está centrado) */}
-            <div className="m-1 w-full col-span-2">
-              <label className="text-xs 2xl:text-base font-bold m-1 block text-center">
+            <div className="m-1 w-full col-span-2 flex flex-col items-center justify-center">
+              <label className="text-xs 2xl:text-base font-bold m-1 text-center">
                 Conductor
               </label>
               <SelectField
+                apiEndpoint='http://localhost:5000/conductores'
+                postApiEndpoint="http://localhost:5000/crear_conductor"
                 options={conductorOptions}
                 onChange={handleConductorChange}
-                value={conductInfo.id}
-                apiUrl="https://ocean-syt-production.up.railway.app/conductor/"
-                fieldType="conductor"
-                showAddNew={true}
-                onAfterSave={refreshOptions}
+                value={conductInfo.conductor}
                 className="appearance-none text-xs 2xl:text-base w-full h-7 border-2 border-[#6D80A6] rounded p-1 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#6D80A6]"
               />
             </div>
 
             {/* Nro. Documento (ocupa 2 columnas) */}
-            <div className="m-1 w-full ">
-              <label className="text-xs 2xl:text-base font-bold m-1 block text-center">
+            <div className="m-1 w-full col-span-2 flex flex-col items-center">
+              <label className="text-xs 2xl:text-base font-bold m-1 text-center">
                 Nro. Documento
               </label>
               <SelectField
+                apiEndpoint='http://localhost:5000/conductores'
+                postApiEndpoint="http://localhost:5000/crear_conductor"
                 options={cedulaOptions}
-                onChange={handleConductorChange}
-                value={conductInfo.id}
-                apiUrl="https://ocean-syt-production.up.railway.app/conductor/"
-                fieldType="conductor"
-                showAddNew={true}
-                onAfterSave={refreshOptions}
+                onChange={handleCedulaChange}
+                value={conductInfo.cedulaConductor}
                 className="appearance-none text-xs 2xl:text-base w-full h-7 border-2 border-[#6D80A6] rounded p-1 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#6D80A6]"
               />
             </div>
@@ -742,17 +1101,16 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
               formType === "INGRESO" ||
               formType === "SERVICIOS" ||
               formType.startsWith("FINALIZAR")) && (
-              <div className="m-1 w-3/4">
-                <label className="text-xs 2xl:text-base text-red-500 font-bold m-1 block text-center">
+              <div className="m-1 w-full flex flex-col items-center">
+                <label className="text-xs text-red-700 2xl:text-base font-bold m-1 text-center">
                   Tráiler
                 </label>
                 <SelectField
+                  apiEndpoint='http://localhost:5000/trailers'
+                  postApiEndpoint="http://localhost:5000/crear_trailer"
                   options={trailerOptions}
                   onChange={handleTrailerChange}
-                  value={trailerInfo.id}
-                  apiUrl="http://localhost:8000/trailer/"
-                  fieldType="trailer"
-                  showAddNew={true}
+                  value={trailerInfo.trailer}
                   className="appearance-none text-xs 2xl:text-base w-full h-7 border-2 border-[#6D80A6] rounded p-1 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[#6D80A6]"
                 />
               </div>
@@ -763,37 +1121,59 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
         {formType === "INGRESO" && (
           <IngresoForm
             ref={ingresoFormRef}
+            productos={productos}
+            proveedores={proveedores}
+            compradores={compradores}
+            patios={patios}
+            origenes={origenes}
             vehicleInfo={vehicleInfo}
             pesoBruto={peso.bruto}
             pesoTara={peso.tara}
             handlePesoBrutoChange={handlePesoBrutoChange}
             handlePesoTaraChange={handlePesoTaraChange}
             onSubmit={handleSubmitRegistro}
-            onActualizar={handleActualizarRegistro}
+            onFinalizar={handleFinalizarTiquete}
+            onAcualizar={handleActualizarTiquete}
           />
         )}
 
         {formType === "DESPACHO" && (
           <DespachoForm
             ref={despachoFormRef}
+            clientes={clientes}
+            productos={productos}
+            transportadoras={transportadoras}
             vehicleInfo={vehicleInfo}
+            destinos={destinos}
+            origenes={origenes}
+            patios={patios}
             pesoTara={peso.tara}
             pesoBruto={peso.bruto}
             handlePesoTaraChange={handlePesoTaraChange}
             handlePesoBrutoChange={handlePesoBrutoChange}
             onSubmit={handleSubmitRegistro}
-            onActualizar={handleActualizarRegistro}
+            onFinalizar={handleFinalizarTiquete}
+            onAcualizar={handleActualizarTiquete}
           />
         )}
 
         {formType === "SERVICIOS" && (
           <ServiciosForm
             ref={servicioFormRef}
+            terceros={terceros}
+            servicios={servicios}
+            compradores={compradores}
+            origenes={origenes}
+            patios={patios}
             vehicleInfo={vehicleInfo}
             pesoBruto={peso.bruto}
+            unidades={unidades}
+            cantidad={cantidad}
+            setCantidad={setCantidad}
             handlePesoBrutoChange={handlePesoBrutoChange}
             onSubmit={handleSubmitRegistro}
-            onActualizar={handleActualizarRegistro}
+            onFinalizar={handleFinalizarTiquete}
+            onAcualizar={handleActualizarTiquete}
           />
         )}
 
@@ -923,7 +1303,6 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
                     }
                     onChange={(e) => setFechaSalida(e.target.value)}
                     tabIndex={"0"} // Habilitado para editar
-                    disabled={isProcessing}
                   />
                   <InputField
                     label="Hora Salida"
@@ -936,7 +1315,6 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
                     }
                     onChange={(e) => setHoraSalida(e.target.value)}
                     tabIndex={"0"} // Habilitado para editar
-                    disabled={isProcessing}
                   />
 
                   <div className="m-0 p-1 flex w-full justify-between">
@@ -972,7 +1350,6 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
                   type="number"
                   id="pesoNeto"
                   value={peso.neto}
-                  disabled={isProcessing}
                   readOnly
                 />
               </div>
@@ -986,7 +1363,7 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
               id="observaciones"
               className="col-start-1 col-end-7 appearance-none border-2 border-[#6D80A6] rounded w-full py-1 px-1 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:[#6D80A6]"
               value={observaciones}
-              onChange={(e) => setObservaciones(e.target.value)}
+              onChange={handleObservacionesChange}
             />
           </FormSection>
         </section>
@@ -1001,7 +1378,9 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
               type="button"
               disabled={!formType || isProcessing} // Desactivar el botón si ya se está procesando
               onClick={() => {
-                if (isFinalizing || isHistorial || isTiquete) {
+                if (isFinalizing) {
+                  handleFinalizar();
+                } else if (isHistorial || isTiquete) {
                   handleActualizar();
                 } else {
                   handleProcesar();
@@ -1031,38 +1410,15 @@ const TiqueteForm = ({ formType: initialFormType, initialData }) => {
             <div>
               <button
                 className="bg-[#182540] hover:bg-[#6D80A6] hover:text-[#f2f2f2] text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:[#6D80A6]"
-                onClick={handleSalir}
+                onClick={async () => {
+                  await cerrarRegistro(ticketNumber, userId);
+
+                  navigate("/registro");
+                }}
               >
                 Salir
               </button>
-              
             </div>
-            {showAlertaSalir && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
-                  <h2 className="text-lg font-bold text-gray-800 mb-4">
-                    ¿Estás seguro?
-                  </h2>
-                  <p className="text-gray-600 mb-6">
-                    Si sales ahora, perderás el consecutivo.
-                  </p>
-                  <div className="flex justify-end space-x-4">
-                    <button
-                      onClick={cancelarSalida}
-                      className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={confirmarSalida}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                    >
-                      Sí, salir
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </section>
       </div>

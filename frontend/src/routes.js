@@ -3,6 +3,9 @@ import { Routes, Route, Router } from "react-router-dom";
 import Login from "./pages/Login";
 import DashboardInicio from "./pages/DashboardInicio";
 import Registro from "./pages/Registro";
+/* import Consultas from './components/Consultas';
+import Soporte from './components/Soporte';
+import TktSoporte from './components/TktSoporte'; */
 import Formulario from "./pages/Formulario";
 
 const routes = () => {

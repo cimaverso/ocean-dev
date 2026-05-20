@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.models.registro.modelo_comprador import CompradorResponse, CompradorCreate, CompradorUpdate
 from app.services.servicio_comprador import CompradorService
 from app.config.database import get_db
-from app.core.core_auth import verificar_rol, obtener_usuario
+from app.core.security import verificar_rol, obtener_usuario
 from fastapi.responses import StreamingResponse
 from typing import Optional
 

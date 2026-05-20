@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.models.usuario.modelo_usuario import UsuarioResponse, UsuarioCreate, UsuarioUpdate
 from app.services.servicio_usuario import UsuarioService
 from app.config.database import get_db
-from app.core.core_auth import verificar_rol
+from app.core.security import verificar_rol
 
 router = APIRouter(
     prefix='/usuario',

@@ -3,7 +3,7 @@ from sqlmodel import Session
 from app.models.registro.modelo_transportadora import TransportadoraResponse, TransportadoraCreate, TransportadoraUpdate
 from app.services.servicio_transportadora import TransportadoraService
 from app.config.database import get_db
-from app.core.core_auth import obtener_usuario, verificar_rol
+from app.core.security import obtener_usuario, verificar_rol
 from fastapi.responses import StreamingResponse
 from typing import Optional
 

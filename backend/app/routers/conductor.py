@@ -5,7 +5,7 @@ from app.services.servicio_conductor import ConductorService
 from app.config.database import get_db
 from typing import Optional
 from fastapi.responses import StreamingResponse
-from app.core.core_auth import verificar_rol, obtener_usuario
+from app.core.security import verificar_rol, obtener_usuario
 
 router = APIRouter(
     prefix='/conductor',

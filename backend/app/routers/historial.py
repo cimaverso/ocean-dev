@@ -5,7 +5,7 @@ from app.services.servicio_historial import HistorialService
 from app.config.database import get_db
 from fastapi.responses import StreamingResponse
 from typing import Optional
-from app.core.core_auth import verificar_rol
+from app.core.security import verificar_rol
 from datetime import date
 
 

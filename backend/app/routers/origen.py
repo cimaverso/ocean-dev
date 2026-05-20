@@ -5,7 +5,7 @@ from sqlmodel import Session
 from app.models.registro.modelo_origen import OrigenResponse, OrigenCreate, OrigenUpdate
 from app.services.servicio_origen import OrigenService
 from app.config.database import get_db
-from app.core.core_auth import obtener_usuario, verificar_rol
+from app.core.security import obtener_usuario, verificar_rol
 from fastapi.responses import StreamingResponse
 from typing import Optional
 

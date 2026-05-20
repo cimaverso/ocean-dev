@@ -11,24 +11,37 @@ const Formulario = () => {
   const initialFormType = location.state ? location.state.formType : "";
 
   const [formType, setFormType] = useState(initialFormType);
-  const [isFormOpen, setIsFormOpen] = useState(true); // Estado para saber si el formulario está abierto
+
+  const handleFormTypeChange = (e) => {
+    const newFormType = e.target.value;
+    if (initialData && initialData.id) {
+      if (window.confirm("¿Quieres cancelar la finalización del registro?")) {
+        setFormType(newFormType);
+      }
+    } else {
+      setFormType(newFormType); 
+    }
+  };
 
   return (
-    <div className="font-montserrat bg-[#0000]">
-      <div className="flex h-full">
-        <Sidebar isFormOpen={isFormOpen} /> {/* Pasa isFormOpen a Sidebar */}
-        <div className="flex flex-col flex-1 w-screen h-dvh overflow-auto">
-          <Header />
-          <div>
-            {initialData.tiquete ? (
-              <TiqueteForm initialData={initialData} formType="FINALIZAR_SERVICIOS" onClose={() => setIsFormOpen(false)} />
-            ) : (
-              <TiqueteForm formType={formType} initialData={initialData} onClose={() => setIsFormOpen(false)} />
-            )}
+    <>
+      <div className="font-montserrat bg-[#F2F2F2]">
+        <div className="flex h-full">
+          <Sidebar />
+          <div className="flex flex-col flex-1 w-screen h-dvh overflow-auto">
+            <Header />
+            <div>
+              
+              {initialData.tiquete ? (
+                <TiqueteForm initialData={initialData} formType="FINALIZAR_SERVICIOS" />
+              ) : (
+                <TiqueteForm formType={formType} initialData={initialData} />
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
