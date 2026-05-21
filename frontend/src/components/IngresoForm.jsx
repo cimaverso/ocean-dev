@@ -62,49 +62,49 @@ const IngresoForm = forwardRef((
     if (!initialData || Object.keys(initialData).length === 0) return;
     if (!proveedores.length || !compradores.length || !productos.length) return;
 
-    const prov = proveedores.find((p) => p.codigo_entidad === initialData?.entidad?.codigoEntidad);
-    const comp = compradores.find((c) => c.codigo_comprador === initialData?.comprador?.codigoComprador);
-    const prod = productos.find((p) => p.codigo_producto === initialData?.producto?.codigoProducto);
-    const pati = patios.find((p) => p.codigo_patio === initialData?.patio?.codigoPatio);
-    const orig = origenes.find((o) => o.codigo_origen === initialData?.origen?.codigoOrigen);
+    const prov = proveedores.find((p) => p.codigo === initialData?.entidad?.codigo);
+    const comp = compradores.find((c) => c.codigo === initialData?.comprador?.codigo);
+    const prod = productos.find((p) => p.codigo === initialData?.producto?.codigo);
+    const pati = patios.find((p) => p.codigo === initialData?.patio?.codigo);
+    const orig = origenes.find((o) => o.codigo === initialData?.origen?.codigo);
 
-    if (prov) setSelectedProveedor(prov.id_entidad);
-    if (comp) setSelectedComprador(comp.id_comprador);
-    if (prod) setSelectedProducto(prod.id_producto);
-    if (pati) setSelectedPatio(pati.id_patio);
-    if (orig) setSelectedOrigen(orig.id_origen);
+    if (prov) setSelectedProveedor(prov.id);
+    if (comp) setSelectedComprador(comp.id);
+    if (prod) setSelectedProducto(prod.id);
+    if (pati) setSelectedPatio(pati.id);
+    if (orig) setSelectedOrigen(orig.id);
   }, [initialData, proveedores, compradores, productos, patios, origenes]);
 
   // ── Builders de opciones ────────────────────────────────────────────────
-  const optsProveedor = proveedores.map((p) => ({ value: p.id_entidad,   label: p.nombre_entidad  }));
-  const optsProvCodigo= proveedores.map((p) => ({ value: p.id_entidad,   label: p.codigo_entidad  }));
-  const optsComprador = compradores.map((c) => ({ value: c.id_comprador, label: c.nombre_comprador}));
-  const optsCompCodigo= compradores.map((c) => ({ value: c.id_comprador, label: c.codigo_comprador}));
-  const optsProducto  = productos.map((p)   => ({ value: p.id_producto,  label: p.nombre_producto }));
-  const optsProdCodigo= productos.map((p)   => ({ value: p.id_producto,  label: p.codigo_producto }));
-  const optsPatio     = patios.map((p)       => ({ value: p.id_patio,    label: p.nombre_patio    }));
-  const optsOrigen    = origenes.map((o)     => ({ value: o.id_origen,   label: o.nombre_origen   }));
+  const optsProveedor = proveedores.map((p) => ({ value: p.id,   label: p.nombre  }));
+  const optsProvCodigo= proveedores.map((p) => ({ value: p.id,   label: p.codigo  }));
+  const optsComprador = compradores.map((c) => ({ value: c.id, label: c.nombre}));
+  const optsCompCodigo= compradores.map((c) => ({ value: c.id, label: c.codigo}));
+  const optsProducto  = productos.map((p)   => ({ value: p.id,  label: p.nombre }));
+  const optsProdCodigo= productos.map((p)   => ({ value: p.id,  label: p.codigo }));
+  const optsPatio     = patios.map((p)       => ({ value: p.id,    label: p.nombre    }));
+  const optsOrigen    = origenes.map((o)     => ({ value: o.id,   label: o.nombre   }));
 
   // ── onAddNew callbacks ──────────────────────────────────────────────────
   const onAddProveedor = async (formData) => {
     const res = await catalogosAPI.crearProveedor(formData);
-    return { value: res.data.id_entidad, label: res.data.nombre_entidad };
+    return { value: res.data.id, label: res.data.nombre };
   };
   const onAddComprador = async (formData) => {
     const res = await catalogosAPI.crearComprador(formData);
-    return { value: res.data.id_comprador, label: res.data.nombre_comprador };
+    return { value: res.data.id, label: res.data.nombre };
   };
   const onAddProducto = async (formData) => {
     const res = await catalogosAPI.crearProducto(formData);
-    return { value: res.data.id_producto, label: res.data.nombre_producto };
+    return { value: res.data.id, label: res.data.nombre };
   };
   const onAddOrigen = async (formData) => {
     const res = await catalogosAPI.crearOrigen(formData);
-    return { value: res.data.id_origen, label: res.data.nombre_origen };
+    return { value: res.data.id, label: res.data.nombre };
   };
   const onAddPatio = async (formData) => {
     const res = await catalogosAPI.crearPatio(formData);
-    return { value: res.data.id_patio, label: res.data.nombre_patio };
+    return { value: res.data.id, label: res.data.nombre };
   };
 
   // ── Handlers de selección ────────────────────────────────────────────────

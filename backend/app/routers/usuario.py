@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
-from app.models.usuario.modelo_usuario import UsuarioResponse, UsuarioCreate, UsuarioUpdate
-from app.services.servicio_usuario import UsuarioService
+from sqlalchemy.orm import Session
+from app.schemas.usuario import UsuarioResponse, UsuarioCreate, UsuarioUpdate
+from app.services.usuario import UsuarioService
 from app.config.database import get_db
 from app.core.security import verificar_rol
 
@@ -12,38 +12,23 @@ router = APIRouter(
 
 @router.get('/', response_model=list[UsuarioResponse], status_code=status.HTTP_200_OK)
 def listar_usuarios(db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-    usuario_service = UsuarioService(db)
-    usuarios = usuario_service.listar_usuarios()
-    return usuarios
+    return UsuarioService(db).listar_usuarios()
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 def crear_usuario(usuario_data: UsuarioCreate, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-    
-    usuario_service = UsuarioService(db)
-    nuevo_usuario = usuario_service.crear_usuario(usuario_data)
-
-    if not nuevo_usuario:
+    nuevo = UsuarioService(db).crear_usuario(usuario_data)
+    if not nuevo:
         raise HTTPException(status_code=400, detail="Error al crear el usuario")
     return {"message": "Usuario creado exitosamente."}
-        
+
 @router.put("/{id}", status_code=status.HTTP_200_OK)
 def actualizar_usuario(id: int, usuario_data: UsuarioUpdate, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-   
-    usuario_service = UsuarioService(db)
-    usuario_actualizado = usuario_service.actualizar_usuario(id, usuario_data)
-
-    if not usuario_actualizado:
+    actualizado = UsuarioService(db).actualizar_usuario(id, usuario_data)
+    if not actualizado:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
     return {"message": "Usuario actualizado exitosamente."}
-    
+
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_usuario(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-    usuario_service = UsuarioService(db)
-    eliminado = usuario_service.eliminar_usuario(id)
-
-    if not eliminado:
+    if not UsuarioService(db).eliminar_usuario(id):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-
-    return {"message": "Usuario eliminado exitosamente."}
-

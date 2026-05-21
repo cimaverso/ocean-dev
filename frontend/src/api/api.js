@@ -40,10 +40,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const isRefreshRequest = (url) =>
+      typeof url === "string" &&
+      (url.includes("/autenticacion/refrescar") || url.includes("/refresh"));
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url.includes("/refresh")
+      !isRefreshRequest(originalRequest.url)
     ) {
       originalRequest._retry = true;
       try {
@@ -51,9 +55,8 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error("Sin refresh token");
 
         const { data } = await axios.post(
-          "http://127.0.0.1:8000/refresh",
-          {},
-          { headers: { Authorization: `Bearer ${refreshToken}` } }
+          `${api.defaults.baseURL}/autenticacion/refrescar`,
+          { refresh_token: refreshToken }
         );
 
         localStorage.setItem("token", data.access_token);
@@ -91,9 +94,9 @@ export const authAPI = {
 
   refresh: () => {
     const refreshToken = localStorage.getItem("refresh_token");
-    return axios.post(
-      "http://127.0.0.1:8000/autenticacion/refrescar",
-      { refresh_token: refreshToken }   // body JSON, no header
+    return api.post(
+      "/autenticacion/refrescar",
+      { refresh_token: refreshToken }
     );
   },
 };
@@ -107,7 +110,18 @@ export const registrosAPI = {
   getRegistros: () => api.get("/obtener_registros"),
 
   /** Próximo ID disponible para registro y tiquete */
-  getProximoId: () => api.get("/obtener_proximo_id"),
+  getProximoId: async () => {
+    const [registroRes, tiqueteRes] = await Promise.all([
+      api.get("/registro/consecutivo"),
+      api.get("/registro/tiquete"),
+    ]);
+    return {
+      data: {
+        proximo_id_registro: registroRes.data.proximo_id,
+        proximo_id_tiquete: tiqueteRes.data.proximo_id_tiquete,
+      },
+    };
+  },
 
   /**
    * Crear registro vacío al abrir el formulario
@@ -198,48 +212,53 @@ const inactivosParam = (incluirInactivos) =>
 export const catalogosAPI = {
   // Productos
   getProductosEntrada: (incluirInactivos = false) =>
-    api.get(`/productos_entrada${inactivosParam(incluirInactivos)}`),
+    api.get(`/producto/1${inactivosParam(incluirInactivos)}`),
 
   getProductosSalida: (incluirInactivos = false) =>
-    api.get(`/productos_salida${inactivosParam(incluirInactivos)}`),
+    api.get(`/producto/2${inactivosParam(incluirInactivos)}`),
 
-  getProductosEntradaSalida: (incluirInactivos = false) =>
-    api.get(`/productos_entrada_salida${inactivosParam(incluirInactivos)}`),
+  getProductosEntradaSalida: async (incluirInactivos = false) => {
+    const [entrada, salida] = await Promise.all([
+      api.get(`/producto/1${inactivosParam(incluirInactivos)}`),
+      api.get(`/producto/2${inactivosParam(incluirInactivos)}`),
+    ]);
+    return { data: [...entrada.data, ...salida.data] };
+  },
 
   getServicios: (incluirInactivos = false) =>
-    api.get(`/servicios${inactivosParam(incluirInactivos)}`),
+    api.get(`/producto/2${inactivosParam(incluirInactivos)}`),
 
-  crearProducto: (data) => api.post("/crear_producto", data),
-  crearServicio: (data) => api.post("/crear_servicio", data),
+  crearProducto: (data) => api.post("/producto/", data),
+  crearServicio: (data) => api.post("/producto/", data),
 
   // Entidades
   getProveedores: (incluirInactivos = false) =>
-    api.get(`/proveedores${inactivosParam(incluirInactivos)}`),
+    api.get(`/entidad/2${inactivosParam(incluirInactivos)}`),
 
   getClientes: (incluirInactivos = false) =>
-    api.get(`/clientes${inactivosParam(incluirInactivos)}`),
+    api.get(`/entidad/1${inactivosParam(incluirInactivos)}`),
 
   getTerceros: (incluirInactivos = false) =>
-    api.get(`/terceros${inactivosParam(incluirInactivos)}`),
+    api.get(`/entidad/3${inactivosParam(incluirInactivos)}`),
 
-  getCompradores: () => api.get("/compradores"),
-  getTransportadoras: () => api.get("/transportadoras"),
+  getCompradores: () => api.get("/comprador/"),
+  getTransportadoras: () => api.get("/transportadora/"),
 
-  crearProveedor: (data) => api.post("/crear_proveedor", data),
-  crearCliente: (data) => api.post("/crear_cliente", data),
-  crearTercero: (data) => api.post("/crear_terceros", data),
-  crearComprador: (data) => api.post("/crear_comprador", data),
-  crearTransportadora: (data) => api.post("/crear_transportadora", data),
+  crearProveedor: (data) => api.post("/entidad/", { tipo_id: 2, ...data }),
+  crearCliente: (data) => api.post("/entidad/", { tipo_id: 1, ...data }),
+  crearTercero: (data) => api.post("/entidad/", { tipo_id: 3, ...data }),
+  crearComprador: (data) => api.post("/comprador/", data),
+  crearTransportadora: (data) => api.post("/transportadora/", data),
 
   // Lugares
-  getPatios: () => api.get("/patios"),
-  getOrigenes: () => api.get("/origenes"),
-  getDestinos: () => api.get("/destinos"),
-  getUnidades: () => api.get("/unidades"),
+  getPatios: () => api.get("/patio/"),
+  getOrigenes: () => api.get("/origen/"),
+  getDestinos: () => api.get("/destino/"),
+  getUnidades: () => api.get("/medida/"),
 
-  crearPatio: (data) => api.post("/crear_patio", data),
-  crearOrigen: (data) => api.post("/crear_origen", data),
-  crearDestino: (data) => api.post("/crear_destino", data),
+  crearPatio: (data) => api.post("/patio/", data),
+  crearOrigen: (data) => api.post("/origen/", data),
+  crearDestino: (data) => api.post("/destino/", data),
 };
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -247,27 +266,34 @@ export const catalogosAPI = {
 // ═════════════════════════════════════════════════════════════════════════════
 
 export const vehiculosAPI = {
-  getVehiculos: () => api.get("/vehiculos"),
-  getVehiculoPorPlaca: (placa) =>
-    api.get(`/vehiculo?vehi_placa=${placa}`),
+  getVehiculos: () => api.get("/vehiculo/"),
+  getVehiculoPorPlaca: async (placa) => {
+    const res = await api.get("/vehiculo/");
+    return { data: res.data.find((v) => v.placa === placa) };
+  },
 
-  getTrailers: () => api.get("/trailers"),
-  getTrailerPorTrailer: (trailer) =>
-    api.get(`/trailer?trai_trailer=${trailer}`),
+  getTrailers: () => api.get("/trailer/"),
+  getTrailerPorTrailer: async (trailer) => {
+    const res = await api.get("/trailer/");
+    return { data: res.data.find((t) => t.placa === trailer) };
+  },
 
-  getConductores: () => api.get("/conductores"),
-  getConductorPorNombre: (nombre) =>
-    api.get(`/conductor?conduct_nombre=${nombre}`),
-  getConductorPorCedula: (cedula) =>
-    api.get(`/conductor?conduct_cedula=${cedula}`),
+  getConductores: () => api.get("/conductor/"),
+  getConductorPorNombre: async (nombre) => {
+    const res = await api.get("/conductor/");
+    return { data: res.data.find((c) => c.nombre === nombre) };
+  },
+  getConductorPorCedula: async (cedula) => {
+    const res = await api.get("/conductor/");
+    return { data: res.data.find((c) => c.cedula === cedula) };
+  },
 };
-
 // ═════════════════════════════════════════════════════════════════════════════
 // FACTURAS
 // ═════════════════════════════════════════════════════════════════════════════
 
 export const facturasAPI = {
-  getFacturas: () => api.get("/facturas"),
+  getFacturas: () => api.get("/factura/"),
   getFacturaPorNumero: (numeroFactura) =>
     api.get(`/factura?numero_factura=${numeroFactura}`),
 };

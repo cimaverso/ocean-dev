@@ -52,41 +52,41 @@ const DespachoForm = forwardRef((
   useEffect(() => {
     if (!initialData || Object.keys(initialData).length === 0) return;
 
-    const cli   = clientes.find((c) => c.codigo_entidad === initialData?.entidad?.codigoEntidad);
-    const trans = transportadoras.find((t) => t.nombre_transportadora === initialData?.transportadora?.nombreTransportadora);
-    const prod  = productos.find((p) => p.codigo_producto === initialData?.producto?.codigoProducto);
-    const dest  = destinos.find((d) => d.nombre_destino === initialData?.destino?.nombreDestino);
-    const orig  = origenes.find((o) => o.codigo_origen === initialData?.origen?.codigoOrigen);
-    const pati  = patios.find((p) => p.codigo_patio === initialData?.patio?.codigoPatio);
+    const cli   = clientes.find((c) => c.codigo === initialData?.entidad?.codigo);
+    const trans = transportadoras.find((t) => t.nombre === initialData?.transportadora?.nombre);
+    const prod  = productos.find((p) => p.codigo === initialData?.producto?.codigo);
+    const dest  = destinos.find((d) => d.nombre === initialData?.destino?.nombre);
+    const orig  = origenes.find((o) => o.codigo === initialData?.origen?.codigo);
+    const pati  = patios.find((p) => p.codigo === initialData?.patio?.codigo);
 
-    if (cli)   setSelectedCliente(cli.id_entidad);
-    if (trans) setSelectedTransportadora(trans.id_transportadora);
-    if (prod)  setSelectedProducto(prod.id_producto);
-    if (dest)  setSelectedDestino(dest.id_destino);
-    if (orig)  setSelectedOrigen(orig.id_origen);
-    if (pati)  setSelectedPatio(pati.id_patio);
-    setOrden(initialData?.transportadora?.ordenTransportadora   || "");
-    setPrecinto(initialData?.transportadora?.precintoTransportadora || "");
+    if (cli)   setSelectedCliente(cli.id);
+    if (trans) setSelectedTransportadora(trans.id);
+    if (prod)  setSelectedProducto(prod.id);
+    if (dest)  setSelectedDestino(dest.id);
+    if (orig)  setSelectedOrigen(orig.id);
+    if (pati)  setSelectedPatio(pati.id);
+    setOrden(initialData?.transportadora?.orden || "");
+    setPrecinto(initialData?.transportadora?.precinto || "");
   }, [initialData, clientes, transportadoras, productos, destinos, origenes, patios]);
 
   // ── Opciones ─────────────────────────────────────────────────────────────
-  const optsCliente    = clientes.map((c) => ({ value: c.id_entidad,         label: c.nombre_entidad          }));
-  const optsCliCodigo  = clientes.map((c) => ({ value: c.id_entidad,         label: c.codigo_entidad          }));
-  const optsTrans      = transportadoras.map((t) => ({ value: t.id_transportadora, label: t.nombre_transportadora }));
-  const optsProducto   = productos.map((p) => ({ value: p.id_producto,       label: p.nombre_producto         }));
-  const optsProdCodigo = productos.map((p) => ({ value: p.id_producto,       label: p.codigo_producto         }));
-  const optsDestino    = destinos.map((d) => ({ value: d.id_destino,         label: d.nombre_destino          }));
-  const optsDestCodigo = destinos.map((d) => ({ value: d.id_destino,         label: d.codigo_destino          }));
-  const optsOrigen     = origenes.map((o) => ({ value: o.id_origen,          label: o.nombre_origen           }));
-  const optsPatio      = patios.map((p) => ({ value: p.id_patio,             label: p.nombre_patio            }));
+  const optsCliente    = clientes.map((c) => ({ value: c.id,         label: c.nombre          }));
+  const optsCliCodigo  = clientes.map((c) => ({ value: c.id,         label: c.codigo          }));
+  const optsTrans      = transportadoras.map((t) => ({ value: t.id,         label: t.nombre         }));
+  const optsProducto   = productos.map((p) => ({ value: p.id,         label: p.nombre         }));
+  const optsProdCodigo = productos.map((p) => ({ value: p.id,         label: p.codigo         }));
+  const optsDestino    = destinos.map((d) => ({ value: d.id,         label: d.nombre         }));
+  const optsDestCodigo = destinos.map((d) => ({ value: d.id,         label: d.codigo         }));
+  const optsOrigen     = origenes.map((o) => ({ value: o.id,         label: o.nombre         }));
+  const optsPatio      = patios.map((p) => ({ value: p.id,         label: p.nombre         }));
 
   // ── onAddNew ─────────────────────────────────────────────────────────────
-  const onAddCliente        = async (d) => { const r = await catalogosAPI.crearCliente(d);        return { value: r.data.id_entidad,         label: r.data.nombre_entidad         }; };
-  const onAddTransportadora = async (d) => { const r = await catalogosAPI.crearTransportadora(d); return { value: r.data.id_transportadora,   label: r.data.nombre_transportadora  }; };
-  const onAddProducto       = async (d) => { const r = await catalogosAPI.crearProducto(d);       return { value: r.data.id_producto,          label: r.data.nombre_producto        }; };
-  const onAddDestino        = async (d) => { const r = await catalogosAPI.crearDestino(d);        return { value: r.data.id_destino,           label: r.data.nombre_destino         }; };
-  const onAddOrigen         = async (d) => { const r = await catalogosAPI.crearOrigen(d);         return { value: r.data.id_origen,            label: r.data.nombre_origen          }; };
-  const onAddPatio          = async (d) => { const r = await catalogosAPI.crearPatio(d);          return { value: r.data.id_patio,             label: r.data.nombre_patio           }; };
+  const onAddCliente        = async (d) => { const r = await catalogosAPI.crearCliente(d);        return { value: r.data.id,         label: r.data.nombre         }; };
+  const onAddTransportadora = async (d) => { const r = await catalogosAPI.crearTransportadora(d); return { value: r.data.id,   label: r.data.nombre  }; };
+  const onAddProducto       = async (d) => { const r = await catalogosAPI.crearProducto(d);       return { value: r.data.id,          label: r.data.nombre        }; };
+  const onAddDestino        = async (d) => { const r = await catalogosAPI.crearDestino(d);        return { value: r.data.id,           label: r.data.nombre         }; };
+  const onAddOrigen         = async (d) => { const r = await catalogosAPI.crearOrigen(d);         return { value: r.data.id,            label: r.data.nombre          }; };
+  const onAddPatio          = async (d) => { const r = await catalogosAPI.crearPatio(d);          return { value: r.data.id,             label: r.data.nombre           }; };
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleClienteChange        = (opt) => setSelectedCliente(opt?.value        ?? "");

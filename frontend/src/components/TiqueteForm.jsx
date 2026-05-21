@@ -80,6 +80,7 @@ const TiqueteForm = ({ formType: initialFormType = "", initialData = {} }) => {
   // ── Opciones de selects de vehículo ─────────────────────────────────────
   const [vehicleOptions,   setVehicleOptions]   = useState([]);
   const [conductorOptions, setConductorOptions] = useState([]);
+  const [conductores,      setConductores]      = useState([]);
   const [cedulaOptions,    setCedulaOptions]    = useState([]);
   const [trailerOptions,   setTrailerOptions]   = useState([]);
   const [facturaOptions,   setFacturaOptions]   = useState([]);
@@ -216,11 +217,12 @@ const TiqueteForm = ({ formType: initialFormType = "", initialData = {} }) => {
           vehiculosAPI.getConductores(),
           facturasAPI.getFacturas(),
         ]);
-        setVehicleOptions(veh.data.map((v) => ({ value: v.placa, label: v.placa })));
-        setTrailerOptions(trail.data.map((t) => ({ value: t.trailer, label: t.trailer })));
-        setConductorOptions(cond.data.map((c) => ({ value: c.nombre_conductor, label: c.nombre_conductor })));
-        setCedulaOptions(cond.data.map((c) => ({ value: c.cedula_conductor, label: c.cedula_conductor })));
-        setFacturaOptions(fact.data.map((f) => ({ value: f.id_factura, label: f.numero_factura })));
+        setVehicleOptions(veh.data.map((v) => ({ value: v.id, label: v.placa })));
+        setTrailerOptions(trail.data.map((t) => ({ value: t.id, label: t.placa })));
+        setConductores(cond.data);
+        setConductorOptions(cond.data.map((c) => ({ value: c.id, label: c.nombre })));
+        setCedulaOptions(cond.data.map((c) => ({ value: c.id, label: c.cedula || "" })));
+        setFacturaOptions(fact.data.map((f) => ({ value: f.id, label: f.fecha })));
       } catch (err) {
         console.error("Error cargando opciones de vehículo:", err);
       }
@@ -312,57 +314,34 @@ const TiqueteForm = ({ formType: initialFormType = "", initialData = {} }) => {
   }, [isHistorial, isTiquete, ticketNumberFinal, userId, navigate]);
 
   // ── Handlers de vehículo / conductor / trailer / factura ─────────────────
-  const handlePlacaChange = async (opt) => {
-    try {
-      const { data } = await vehiculosAPI.getVehiculoPorPlaca(opt.value);
-      setVehicleInfo({ placa: opt.value, vehi_id: data.id_vehiculo });
-    } catch {
-      setNotif({ message: "Vehículo no encontrado", type: "error" });
-    }
+  const handlePlacaChange = (opt) => {
+    setVehicleInfo({ placa: opt?.label || "", vehi_id: opt?.value || null });
   };
 
-  const handleTrailerChange = async (opt) => {
-    try {
-      const { data } = await vehiculosAPI.getTrailerPorTrailer(opt.value);
-      setTrailerInfo({ trailer: opt.value, trai_id: data.id_trailer });
-    } catch {
-      setNotif({ message: "Trailer no encontrado", type: "error" });
-    }
+  const handleTrailerChange = (opt) => {
+    setTrailerInfo({ trailer: opt?.label || "", trai_id: opt?.value || null });
   };
 
-  const handleConductorChange = async (opt) => {
-    try {
-      const { data } = await vehiculosAPI.getConductorPorNombre(opt.value);
-      setConductInfo({
-        conductor:       opt.value,
-        cedulaConductor: data.cedula_conductor || "",
-        conduct_id:      data.id_conductor,
-      });
-    } catch {
-      setNotif({ message: "Conductor no encontrado", type: "error" });
-    }
+  const handleConductorChange = (opt) => {
+    const conductor = conductores.find((c) => c.id === opt?.value);
+    setConductInfo({
+      conductor:       conductor?.nombre || opt?.label || "",
+      cedulaConductor: conductor?.cedula || "",
+      conduct_id:      opt?.value || null,
+    });
   };
 
-  const handleCedulaChange = async (opt) => {
-    try {
-      const { data } = await vehiculosAPI.getConductorPorCedula(opt.value);
-      setConductInfo({
-        conductor:       data.nombre_conductor || "",
-        cedulaConductor: opt.value,
-        conduct_id:      data.id_conductor,
-      });
-    } catch {
-      setNotif({ message: "Conductor no encontrado", type: "error" });
-    }
+  const handleCedulaChange = (opt) => {
+    const conductor = conductores.find((c) => c.id === opt?.value);
+    setConductInfo({
+      conductor:       conductor?.nombre || "",
+      cedulaConductor: opt?.label || "",
+      conduct_id:      opt?.value || null,
+    });
   };
 
-  const handleFacturaChange = async (opt) => {
-    try {
-      const { data } = await facturasAPI.getFacturaPorNumero(opt.value);
-      setFacturaInfo({ numero_factura: data.numero_factura, fac_id: data.id_factura });
-    } catch {
-      setNotif({ message: "Factura no encontrada", type: "error" });
-    }
+  const handleFacturaChange = (opt) => {
+    setFacturaInfo({ numero_factura: opt?.label || "", fac_id: opt?.value || null });
   };
 
   // ── Handlers de peso ─────────────────────────────────────────────────────

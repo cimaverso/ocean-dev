@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Notification from "./Layouts/Notificacion";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
+import api from "../api/api";
 
 const Nuevo = () => {
   const { userName, getToken } = useAuth();
@@ -24,7 +24,7 @@ const Nuevo = () => {
         formData.append("archivo", archivo);
       }
 
-      const response = await axios.post("http://127.0.0.1:5000/enviar_email", formData, {
+      const response = await api.post("/enviar_email", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`

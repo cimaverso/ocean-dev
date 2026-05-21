@@ -51,17 +51,17 @@ const ServiciosForm = forwardRef((
   useEffect(() => {
     if (!initialData || Object.keys(initialData).length === 0) return;
 
-    const terc = terceros.find((t) => t.codigo_entidad === initialData?.entidad?.codigoEntidad);
-    const comp = compradores.find((c) => c.codigo_comprador === initialData?.comprador?.codigoComprador);
-    const serv = servicios.find((s) => s.codigo_producto === initialData?.producto?.codigoProducto);
-    const orig = origenes.find((o) => o.codigo_origen === initialData?.origen?.codigoOrigen);
-    const pati = patios.find((p) => p.codigo_patio === initialData?.patio?.codigoPatio);
+    const terc = terceros.find((t) => t.codigo === initialData?.entidad?.codigo);
+    const comp = compradores.find((c) => c.codigo === initialData?.comprador?.codigo);
+    const serv = servicios.find((s) => s.codigo === initialData?.producto?.codigo);
+    const orig = origenes.find((o) => o.codigo === initialData?.origen?.codigo);
+    const pati = patios.find((p) => p.codigo === initialData?.patio?.codigo);
 
-    if (terc) setSelectedTercero(terc.id_entidad);
-    if (comp) setSelectedComprador(comp.id_comprador);
-    if (serv) { setSelectedServicio(serv.id_producto); setUnidad(serv.unidad_medida || ""); }
-    if (orig) setSelectedOrigen(orig.id_origen);
-    if (pati) setSelectedPatio(pati.id_patio);
+    if (terc) setSelectedTercero(terc.id);
+    if (comp) setSelectedComprador(comp.id);
+    if (serv) { setSelectedServicio(serv.id); setUnidad(serv.unidad_medida?.nombre || ""); }
+    if (orig) setSelectedOrigen(orig.id);
+    if (pati) setSelectedPatio(pati.id);
     setCantidad(initialData.cantidad    || "");
     setObservaciones(initialData.observaciones || "");
   }, [initialData, terceros, compradores, servicios, origenes, patios]);
@@ -73,21 +73,21 @@ const ServiciosForm = forwardRef((
   }, [selectedServicio, servicios]);
 
   // ── Opciones ─────────────────────────────────────────────────────────────
-  const optsTercero    = terceros.map((t)    => ({ value: t.id_entidad,   label: t.nombre_entidad    }));
-  const optsTercCodigo = terceros.map((t)    => ({ value: t.id_entidad,   label: t.codigo_entidad    }));
-  const optsComprador  = compradores.map((c) => ({ value: c.id_comprador, label: c.nombre_comprador  }));
-  const optsCompCodigo = compradores.map((c) => ({ value: c.id_comprador, label: c.codigo_comprador  }));
-  const optsServicio   = servicios.map((s)   => ({ value: s.id_producto,  label: s.nombre_producto   }));
-  const optsServCodigo = servicios.map((s)   => ({ value: s.id_producto,  label: s.codigo_producto   }));
-  const optsOrigen     = origenes.map((o)    => ({ value: o.id_origen,    label: o.nombre_origen     }));
-  const optsPatio      = patios.map((p)      => ({ value: p.id_patio,     label: p.nombre_patio      }));
+  const optsTercero    = terceros.map((t)    => ({ value: t.id,   label: t.nombre    }));
+  const optsTercCodigo = terceros.map((t)    => ({ value: t.id,   label: t.codigo    }));
+  const optsComprador  = compradores.map((c) => ({ value: c.id, label: c.nombre  }));
+  const optsCompCodigo = compradores.map((c) => ({ value: c.id, label: c.codigo  }));
+  const optsServicio   = servicios.map((s)   => ({ value: s.id,  label: s.nombre   }));
+  const optsServCodigo = servicios.map((s)   => ({ value: s.id,  label: s.codigo   }));
+  const optsOrigen     = origenes.map((o)    => ({ value: o.id,    label: o.nombre     }));
+  const optsPatio      = patios.map((p)      => ({ value: p.id,     label: p.nombre      }));
 
   // ── onAddNew ─────────────────────────────────────────────────────────────
-  const onAddTercero   = async (d) => { const r = await catalogosAPI.crearTercero(d);   return { value: r.data.id_entidad,   label: r.data.nombre_entidad   }; };
-  const onAddComprador = async (d) => { const r = await catalogosAPI.crearComprador(d); return { value: r.data.id_comprador, label: r.data.nombre_comprador }; };
-  const onAddServicio  = async (d) => { const r = await catalogosAPI.crearServicio(d);  return { value: r.data.id_producto,  label: r.data.nombre_producto  }; };
-  const onAddOrigen    = async (d) => { const r = await catalogosAPI.crearOrigen(d);    return { value: r.data.id_origen,    label: r.data.nombre_origen    }; };
-  const onAddPatio     = async (d) => { const r = await catalogosAPI.crearPatio(d);     return { value: r.data.id_patio,     label: r.data.nombre_patio     }; };
+  const onAddTercero   = async (d) => { const r = await catalogosAPI.crearTercero(d);   return { value: r.data.id,   label: r.data.nombre   }; };
+  const onAddComprador = async (d) => { const r = await catalogosAPI.crearComprador(d); return { value: r.data.id, label: r.data.nombre }; };
+  const onAddServicio  = async (d) => { const r = await catalogosAPI.crearServicio(d);  return { value: r.data.id,  label: r.data.nombre  }; };
+  const onAddOrigen    = async (d) => { const r = await catalogosAPI.crearOrigen(d);    return { value: r.data.id,    label: r.data.nombre    }; };
+  const onAddPatio     = async (d) => { const r = await catalogosAPI.crearPatio(d);     return { value: r.data.id,     label: r.data.nombre     }; };
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleTerceroChange   = (opt) => setSelectedTercero(opt?.value   ?? "");

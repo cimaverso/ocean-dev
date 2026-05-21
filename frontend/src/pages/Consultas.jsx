@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import axios from "axios";
 import moment from 'moment';
+import api, { catalogosAPI, vehiculosAPI, facturasAPI } from "../api/api";
 import Sidebar from "../components/Layouts/Sidebar";
 import Header from "../components/Layouts/Header";
 import Table from "../components/Layouts/Tabla";
@@ -65,22 +65,22 @@ function Consultas() {
   const fetchCommonData = async () => {
     try {
       const [clientesResponse, proveedoresResponse, tercerosResponse, productosEntradaResponse, productosSalidaResponse, productosEntradaSalidaResponse, variosResponse, destinosResponse, origenesResponse, patiosResponse, compradoresResponse, transportadorasResponse, conductoresResponse, vehiculosResponse, trailersResponse, facturaResponse] = await Promise.all([
-        axios.get('http://localhost:5000/clientes'),
-        axios.get('http://localhost:5000/proveedores'),
-        axios.get('http://localhost:5000/terceros'),
-        axios.get('http://localhost:5000/productos_entrada'),
-        axios.get('http://localhost:5000/productos_salida'),
-        axios.get('http://localhost:5000/productos_entrada_salida'),
-        axios.get('http://localhost:5000/servicios'),
-        axios.get('http://localhost:5000/destinos'),
-        axios.get('http://localhost:5000/origenes'),
-        axios.get('http://localhost:5000/patios'),
-        axios.get('http://localhost:5000/compradores'),
-        axios.get('http://localhost:5000/transportadoras'),
-        axios.get('http://localhost:5000/conductores'),
-        axios.get('http://localhost:5000/vehiculos'),
-        axios.get('http://localhost:5000/trailers'),
-        axios.get('http://localhost:5000/facturas')
+        catalogosAPI.getClientes(),
+        catalogosAPI.getProveedores(),
+        catalogosAPI.getTerceros(),
+        catalogosAPI.getProductosEntrada(),
+        catalogosAPI.getProductosSalida(),
+        catalogosAPI.getProductosEntradaSalida(),
+        catalogosAPI.getServicios(),
+        catalogosAPI.getDestinos(),
+        catalogosAPI.getOrigenes(),
+        catalogosAPI.getPatios(),
+        catalogosAPI.getCompradores(),
+        catalogosAPI.getTransportadoras(),
+        vehiculosAPI.getConductores(),
+        vehiculosAPI.getVehiculos(),
+        vehiculosAPI.getTrailers(),
+        facturasAPI.getFacturas()
       ]);
 
       setClientes(clientesResponse.data);
@@ -106,48 +106,68 @@ function Consultas() {
     }
   };
 
+  const tipoMap = {
+    Ingreso: 1,
+    Despacho: 2,
+    Servicios: 3,
+  };
+
   const fetchData = async () => {
     setLoading(true);
     if (cancelTokenSource.current) {
       cancelTokenSource.current.cancel('Operation canceled due to new request.');
     }
-    cancelTokenSource.current = axios.CancelToken.source();
+    cancelTokenSource.current = api.CancelToken.source();
 
     try {
-      let apiUrl = "";
       let response;
       const includeInactive = true;
 
+      if (["Ingreso", "Despacho", "Servicios"].includes(formType)) {
+        const tipo = tipoMap[formType];
+        response = await api.get(`/registro/finalizado/${tipo}`, {
+          params: {
+            fecha_inicio: startDate,
+            fecha_fin: endDate,
+          },
+          cancelToken: cancelTokenSource.current.token,
+        });
+
+        if (formType === "Ingreso") setIngresos(response.data);
+        if (formType === "Despacho") setDespachos(response.data);
+        if (formType === "Servicios") setServicios(response.data);
+        fetchCommonData();
+        return;
+      }
+
       switch (formType) {
-        case "Ingreso":
-        case "Despacho":
-        case "Servicios":
-          apiUrl = `http://localhost:5000/obtener_tiquetes?tipo=${formType.toLowerCase()}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
-          if (formType === "Ingreso") setIngresos(response.data);
-          if (formType === "Despacho") setDespachos(response.data);
-          if (formType === "Servicios") setServicios(response.data);
-          fetchCommonData()
-          break;
         case "Cliente":
-          apiUrl = `http://localhost:5000/clientes?incluir_inactivos=${includeInactive}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/entidad/1", {
+            params: { incluir_inactivos: includeInactive },
+            cancelToken: cancelTokenSource.current.token,
+          });
           setClientes(response.data);
           break;
         case "Proveedor":
-          apiUrl = `http://localhost:5000/proveedores?incluir_inactivos=${includeInactive}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/entidad/2", {
+            params: { incluir_inactivos: includeInactive },
+            cancelToken: cancelTokenSource.current.token,
+          });
           setProveedores(response.data);
           break;
         case "Tercero":
-          apiUrl = `http://localhost:5000/terceros?incluir_inactivos=${includeInactive}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/entidad/3", {
+            params: { incluir_inactivos: includeInactive },
+            cancelToken: cancelTokenSource.current.token,
+          });
           setTerceros(response.data);
           break;
         case "Producto":
           try {
-            const url = `http://localhost:5000/productos?incluir_inactivos=${includeInactive}`;
-            const response = await axios.get(url, { cancelToken: cancelTokenSource.current.token });
+            response = await api.get("/producto/1", {
+              params: { incluir_inactivos: includeInactive },
+              cancelToken: cancelTokenSource.current.token,
+            });
             const allProductos = response.data;
             fetchProcesosProducto();
             fetchUnidadesMedida();
@@ -157,62 +177,73 @@ function Consultas() {
           }
           break;
         case "Varios":
-          apiUrl = `http://localhost:5000/servicios?incluir_inactivos=${includeInactive}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/producto/2", {
+            params: { incluir_inactivos: includeInactive },
+            cancelToken: cancelTokenSource.current.token,
+          });
           setVarios(response.data);
           fetchUnidadesMedida();
           break;
         case "Vehiculo":
-          apiUrl = `http://localhost:5000/vehiculos?incluir_inactivos=${includeInactive}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/vehiculo/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setVehiculos(response.data);
           fetchConductores();
           break;
         case "Conductor":
-          apiUrl = `http://localhost:5000/conductores?incluir_inactivos=${includeInactive}`;
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/conductor/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setConductores(response.data);
           break;
         case "Origen":
-          apiUrl = "http://localhost:5000/origenes";
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/origen/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setOrigenes(response.data);
           break;
         case "Destino":
-          apiUrl = "http://localhost:5000/destinos";
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/destino/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setDestinos(response.data);
           break;
         case "Patio":
-          apiUrl = "http://localhost:5000/patios";
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/patio/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setPatios(response.data);
           break;
         case "Comprador":
-          apiUrl = "http://localhost:5000/compradores";
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/comprador/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setCompradores(response.data);
           break;
         case "Trailer":
-          apiUrl = "http://localhost:5000/trailers"; 
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/trailer/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setTrailers(response.data);
           break;
         case "Transportadora":
-          apiUrl = "http://localhost:5000/transportadoras";
-          response = await axios.get(apiUrl, { cancelToken: cancelTokenSource.current.token });
+          response = await api.get("/transportadora/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setTransportadoras(response.data);
           break;
         case "Factura":
-          apiUrl = 'http://127.0.0.1:5000/facturas';
-          response = await axios.get(apiUrl, {cancelToken: cancelTokenSource.current.token});
+          response = await api.get("/factura/", {
+            cancelToken: cancelTokenSource.current.token,
+          });
           setFacturas(response.data);
           break;
         default:
           break;
       }
     } catch (error) {
-      if (axios.isCancel(error)) {
+      if (api.isCancel(error)) {
         console.log('Request canceled', error.message);
       } else {
         setErrorMessage("Error fetching data: " + error.message);
@@ -224,7 +255,7 @@ function Consultas() {
 
   const fetchProcesosProducto = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/obtener_procesos_producto', { cancelToken: cancelTokenSource.current.token });
+      const response = await api.get('/proceso/', { cancelToken: cancelTokenSource.current.token });
       setProcesosProducto(response.data);
     } catch (error) {
       console.error('Error fetching procesos producto:', error);
@@ -233,7 +264,7 @@ function Consultas() {
 
   const fetchUnidadesMedida = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/unidades', { cancelToken: cancelTokenSource.current.token });
+      const response = await api.get('/medida/', { cancelToken: cancelTokenSource.current.token });
       setUnidadesMedida(response.data);
     } catch (error) {
       console.error('Error fetching unidades de medida:', error);
@@ -242,25 +273,48 @@ function Consultas() {
 
   const fetchConductores = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/conductores', { cancelToken: cancelTokenSource.current.token });
+      const response = await api.get('/conductor/', { cancelToken: cancelTokenSource.current.token });
       setConductores(response.data);
     } catch (error) {
       console.error('Error fetching conductores:', error);
     }
-  }; 
+  };
 
   useEffect(() => {
     fetchData();
   }, [formType]);
 
   const handleExport = () => {
-    let apiUrl = `http://localhost:5000/exportar_datos?tipo=${formType}&searchQuery=${encodeURIComponent(searchQuery)}`;
+    const exportPaths = {
+      Ingreso: '/registro/exportar/ingresos',
+      Despacho: '/registro/exportar/despachos',
+      Servicios: '/registro/exportar/servicios',
+      Cliente: '/entidad/exportar/1',
+      Proveedor: '/entidad/exportar/2',
+      Tercero: '/entidad/exportar/3',
+      Producto: '/producto/exportar/1',
+      Varios: '/producto/exportar/2',
+      Vehiculo: '/vehiculo/exportar',
+      Trailer: '/trailer/exportar',
+      Conductor: '/conductor/exportar',
+      Origen: '/origen/exportar',
+      Destino: '/destino/exportar',
+      Patio: '/patio/exportar',
+      Comprador: '/comprador/exportar',
+      Transportadora: '/transportadora/exportar',
+      Factura: '/factura/exportar'
+    };
 
+    const exportPath = exportPaths[formType];
+    if (!exportPath) return;
+
+    const params = new URLSearchParams({ consulta: searchQuery });
     if (["Ingreso", "Despacho", "Servicios"].includes(formType)) {
-      apiUrl += `&start_date=${startDate}&end_date=${endDate}`;
+      params.set('fecha_inicio', startDate);
+      params.set('fecha_fin', endDate);
     }
 
-    window.location.href = apiUrl;
+    window.location.href = `${api.defaults.baseURL}${exportPath}?${params.toString()}`;
   };
 
   const handleDoubleClick = (record) => {
