@@ -1,316 +1,270 @@
-import React, { useState, forwardRef, useImperativeHandle, useEffect, useRef } from "react";
+/**
+ * IngresoForm.jsx
+ * Proyecto Ocean — Sistema de pesaje
+ *
+ * Subformulario para registros de tipo INGRESO.
+ * Recibe catálogos como props desde TiqueteForm (que es dueño del fetch).
+ * No hace ninguna llamada HTTP directa.
+ *
+ * Props:
+ *   productos    {Array}    — Lista de productos
+ *   proveedores  {Array}    — Lista de proveedores
+ *   compradores  {Array}    — Lista de compradores
+ *   patios       {Array}    — Lista de patios
+ *   origenes     {Array}    — Lista de orígenes
+ *   pesoBruto    {number}   — Peso bruto actual
+ *   onSubmit     {Function} — (data, tipoId) => void — procesar registro
+ *   onFinalizar  {Function} — (data) => Promise       — finalizar tiquete
+ *   onActualizar {Function} — (data) => void          — actualizar tiquete
+ *   handleImprimirTiquete {Function} — (tiqueteId) => void
+ */
+
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
 import { useLocation } from "react-router-dom";
 import SelectField from "./Layouts/SelectField";
 import FormSection from "./FormSection";
 import Notification from "./Layouts/Notificacion";
-import axios from 'axios';
+import { catalogosAPI } from "../api/api";
+import "./SubForm.css";
 
-
-const IngresoForm = forwardRef(({ productos, proveedores, compradores, patios, origenes, pesoBruto, onSubmit, onFinalizar, onActualizar, handleImprimirTiquete }, ref) => {
-  const location = useLocation();
-  const initialData = location.state ? location.state.record : {};
+const IngresoForm = forwardRef((
+  {
+    productos   = [],
+    proveedores = [],
+    compradores = [],
+    patios      = [],
+    origenes    = [],
+    pesoBruto,
+    onSubmit,
+    onFinalizar,
+    onActualizar,
+    handleImprimirTiquete,
+  },
+  ref
+) => {
+  const location    = useLocation();
+  const initialData = location.state?.record || {};
 
   const [selectedProveedor, setSelectedProveedor] = useState("");
   const [selectedComprador, setSelectedComprador] = useState("");
-  const [selectedProducto, setSelectedProducto] = useState("");
-  const [selectedOrigen, setSelectedOrigen] = useState("");
-  const [selectedPatio, setSelectedPatio] = useState("");
-  const [formType, setFormType] = useState("");
-  const [notification, setNotification] = useState({ message: "", type: "" });
+  const [selectedProducto,  setSelectedProducto]  = useState("");
+  const [selectedOrigen,    setSelectedOrigen]    = useState("");
+  const [selectedPatio,     setSelectedPatio]     = useState("");
+  const [notif,             setNotif]             = useState({ message: "", type: "" });
 
-  
-
+  // ── Autocompletar desde initialData ────────────────────────────────────
   useEffect(() => {
-    if (initialData && Object.keys(initialData).length > 0 && proveedores.length > 0 && compradores.length > 0 && productos.length > 0 && patios.length > 0 && origenes.length > 0) {
-      const proveedor = proveedores.find(pr => pr.codigo_entidad === initialData?.entidad?.codigoEntidad);
-      const comprador = compradores.find(c => c.codigo_comprador === initialData?.comprador?.codigoComprador);
-      const producto = productos.find(p => p.codigo_producto === initialData?.producto?.codigoProducto);
-      const patio = patios.find(pt => pt.codigo_patio === initialData?.patio?.codigoPatio);
-      const origen = origenes.find(o => o.codigo_origen === initialData?.origen?.codigoOrigen);
- 
-      // Solo autocompletar si no se han seleccionado manualmente
-      setSelectedProveedor(proveedor ? proveedor.id_entidad : '');
-      setSelectedComprador(comprador ? comprador.id_comprador : '');
-      setSelectedProducto(producto ? producto.id_producto : '');
-      setSelectedPatio(patio ? patio.id_patio : '');
-      setSelectedOrigen(origen ? origen.id_origen : '');
-    }
+    if (!initialData || Object.keys(initialData).length === 0) return;
+    if (!proveedores.length || !compradores.length || !productos.length) return;
+
+    const prov = proveedores.find((p) => p.codigo_entidad === initialData?.entidad?.codigoEntidad);
+    const comp = compradores.find((c) => c.codigo_comprador === initialData?.comprador?.codigoComprador);
+    const prod = productos.find((p) => p.codigo_producto === initialData?.producto?.codigoProducto);
+    const pati = patios.find((p) => p.codigo_patio === initialData?.patio?.codigoPatio);
+    const orig = origenes.find((o) => o.codigo_origen === initialData?.origen?.codigoOrigen);
+
+    if (prov) setSelectedProveedor(prov.id_entidad);
+    if (comp) setSelectedComprador(comp.id_comprador);
+    if (prod) setSelectedProducto(prod.id_producto);
+    if (pati) setSelectedPatio(pati.id_patio);
+    if (orig) setSelectedOrigen(orig.id_origen);
   }, [initialData, proveedores, compradores, productos, patios, origenes]);
 
-  const handleProveedorChange = (selectedOption) => {
-    const id = selectedOption.value;
-    const proveedor = proveedores.find(proveedor => proveedor.id_entidad === parseInt(id));
-    setSelectedProveedor(proveedor ? proveedor.id_entidad : '');
+  // ── Builders de opciones ────────────────────────────────────────────────
+  const optsProveedor = proveedores.map((p) => ({ value: p.id_entidad,   label: p.nombre_entidad  }));
+  const optsProvCodigo= proveedores.map((p) => ({ value: p.id_entidad,   label: p.codigo_entidad  }));
+  const optsComprador = compradores.map((c) => ({ value: c.id_comprador, label: c.nombre_comprador}));
+  const optsCompCodigo= compradores.map((c) => ({ value: c.id_comprador, label: c.codigo_comprador}));
+  const optsProducto  = productos.map((p)   => ({ value: p.id_producto,  label: p.nombre_producto }));
+  const optsProdCodigo= productos.map((p)   => ({ value: p.id_producto,  label: p.codigo_producto }));
+  const optsPatio     = patios.map((p)       => ({ value: p.id_patio,    label: p.nombre_patio    }));
+  const optsOrigen    = origenes.map((o)     => ({ value: o.id_origen,   label: o.nombre_origen   }));
+
+  // ── onAddNew callbacks ──────────────────────────────────────────────────
+  const onAddProveedor = async (formData) => {
+    const res = await catalogosAPI.crearProveedor(formData);
+    return { value: res.data.id_entidad, label: res.data.nombre_entidad };
+  };
+  const onAddComprador = async (formData) => {
+    const res = await catalogosAPI.crearComprador(formData);
+    return { value: res.data.id_comprador, label: res.data.nombre_comprador };
+  };
+  const onAddProducto = async (formData) => {
+    const res = await catalogosAPI.crearProducto(formData);
+    return { value: res.data.id_producto, label: res.data.nombre_producto };
+  };
+  const onAddOrigen = async (formData) => {
+    const res = await catalogosAPI.crearOrigen(formData);
+    return { value: res.data.id_origen, label: res.data.nombre_origen };
+  };
+  const onAddPatio = async (formData) => {
+    const res = await catalogosAPI.crearPatio(formData);
+    return { value: res.data.id_patio, label: res.data.nombre_patio };
   };
 
-  const handleProductoChange = (selectedOption) => {
-    const id = selectedOption.value;
-    const producto = productos.find(prod => prod.id_producto === parseInt(id));
-    setSelectedProducto(producto ? producto.id_producto : '');
-  };
+  // ── Handlers de selección ────────────────────────────────────────────────
+  const handleProveedorChange = (opt) => setSelectedProveedor(opt?.value ?? "");
+  const handleCompradorChange = (opt) => setSelectedComprador(opt?.value ?? "");
+  const handleProductoChange  = (opt) => setSelectedProducto(opt?.value  ?? "");
+  const handleOrigenChange    = (opt) => setSelectedOrigen(opt?.value    ?? "");
+  const handlePatioChange     = (opt) => setSelectedPatio(opt?.value     ?? "");
 
-  const handleCompradorChange = (selectedOption) => {
-    const id = selectedOption.value;
-    const comprador = compradores.find(comp => comp.id_comprador === parseInt(id));
-    setSelectedComprador(comprador ? comprador.id_comprador : '');
-  };
-
-  const handleOrigenChange = (selectedOption) => {
-    const id = selectedOption.value;
-    const origen = origenes.find(ori => ori.id_origen === parseInt(id));
-    setSelectedOrigen(origen ? origen.id_origen : '');
-  };
-
-  const handlePatioChange = (selectedOption) => {
-    const id = selectedOption.value;
-    const patio = patios.find(pat => pat.id_patio === parseInt(id));
-    setSelectedPatio(patio ? patio.id_patio : '');
-  };
-
-
-  const handleProcesar = () => {
-    if (selectedProducto && selectedProveedor && selectedComprador && selectedOrigen && selectedPatio && pesoBruto) {
-      const data = {
-
-        ent_id: selectedProveedor,
-        prod_id: selectedProducto,
-        comp_id: selectedComprador,
-
-        id_patio: selectedPatio,
-        id_origen: selectedOrigen || null,
-        estado: "TRANSITO"
-      };
-      onSubmit(data);
-    }
-  };
-
-  const handleFinalizar = async () => {
-    const finalizarData = {
-      //fecha_entrada: fechaEntrada || initialData.fEntrada,
-      ///hora_entrada: horaEntrada || initialData.hEntrada,
-      fecha_salida: new Date().toISOString().slice(0, 10),
-      hora_salida: new Date().toTimeString().slice(0, 8),
-      id_origen: selectedOrigen,
-      id_patio: selectedPatio,
-      comp_id: selectedComprador,
-      ent_id: selectedProveedor,
-      prod_id: selectedProducto,
-      tipo: initialData.tipo
-    };
-
-    try {
-      const response = await onFinalizar(finalizarData);
-
-      if (response && response.data && response.data.tiquete_id) {
-        const tiqueteId = response.data.tiquete_id;
-
-        setSelectedProveedor(finalizarData.ent_id);
-        setSelectedComprador(finalizarData.comp_id);
-        setSelectedProducto(finalizarData.prod_id);
-        setSelectedPatio(finalizarData.id_patio);
-        setSelectedOrigen(finalizarData.id_origen);
-
-        // Llamar a la función para imprimir el tiquete con el ID recién creado
-        handleImprimirTiquete(tiqueteId);
-      } else {
-        throw new Error("No se recibió el ID del tiquete en la respuesta.");
-      }
-    } catch (error) {
-      setNotification({ message: "Error al finalizar y guardar el tiquete: " + (error.response ? error.response.data.error : error.message), type: "error" });
-    }
-  };
-
-  const handleActualizar = () => {
-    const actualizarData = {
-      tiquete_id: initialData.id,
-      ent_id: selectedProveedor,
-      prod_id: selectedProducto,
-      trasn_id: selectedComprador,
-      id_patio: selectedPatio,
-      id_origen: selectedOrigen,
-    };
-
-    // Llamar a la función de actualización y luego actualizar el estado local
-    onActualizar(actualizarData);
-
-    // Actualizar el estado local con los datos actualizados
-    setSelectedProveedor(actualizarData.ent_id);
-    setSelectedComprador(actualizarData.comp_id);
-    setSelectedProducto(actualizarData.prod_id);
-    setSelectedPatio(actualizarData.id_patio);
-    setSelectedOrigen(actualizarData.id_origen);
-  };
-
+  // ── getFormData ──────────────────────────────────────────────────────────
   const getFormData = () => ({
-    fecha_entrada: initialData.fEntrada,
-    hora_entrada: initialData.hEntrada,
-    fecha_salida: new Date().toISOString().slice(0, 10),
-    hora_salida: new Date().toTimeString().slice(0, 8),
-    id_origen: selectedOrigen,
-    id_patio: selectedPatio,
-    comp_id: selectedComprador,
-    ent_id: selectedProveedor,
-    prod_id: selectedProducto,
-    tipo: initialData.tipo
+    ent_id:    selectedProveedor,
+    prod_id:   selectedProducto,
+    comp_id:   selectedComprador,
+    id_patio:  selectedPatio,
+    id_origen: selectedOrigen || null,
+    tipo:      initialData.tipo,
   });
 
+  // ── handleProcesar ───────────────────────────────────────────────────────
+  const handleProcesar = () => {
+    if (selectedProducto && selectedProveedor && selectedComprador &&
+        selectedOrigen && selectedPatio && pesoBruto) {
+      onSubmit?.({ ...getFormData(), estado: "TRANSITO" }, 1);
+    }
+  };
+
+  // ── handleFinalizar ──────────────────────────────────────────────────────
+  const handleFinalizar = async () => {
+    const data = {
+      ...getFormData(),
+      fecha_salida: new Date().toISOString().slice(0, 10),
+      hora_salida:  new Date().toTimeString().slice(0, 8),
+    };
+    try {
+      const response = await onFinalizar?.(data);
+      if (response?.data?.tiquete_id) {
+        handleImprimirTiquete?.(response.data.tiquete_id);
+      }
+    } catch (err) {
+      setNotif({
+        message: "Error al finalizar: " + (err.response?.data?.error || err.message),
+        type: "error",
+      });
+    }
+  };
+
+  // ── handleActualizar ─────────────────────────────────────────────────────
+  const handleActualizar = () => {
+    onActualizar?.({ tiquete_id: initialData.id, ...getFormData() });
+  };
+
+  // ── Exponer métodos al padre via ref ─────────────────────────────────────
   useImperativeHandle(ref, () => ({
     handleProcesar,
     handleFinalizar,
     handleActualizar,
-    getFormData
+    getFormData,
   }));
 
   return (
-    <>
-      <section className="grid grid-cols-2">
-        <div className="mr-1">
-          <FormSection title="Proveedor">
-            
-            <SelectField
-              label="Nombre"
-              id="nombreProveedor"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...proveedores.map((proveedor) => ({
-                  value: proveedor.id_entidad,
-                  label: proveedor.nombre_entidad,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/proveedores" 
-              postApiEndpoint="http://localhost:5000/Producto/add"
-              value={selectedProveedor}
-              onChange={handleProveedorChange}
-            />
-            <SelectField
-              label="Código"
-              id="codigoProveedor"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...proveedores.map((proveedor) => ({
-                  value: proveedor.id_entidad,
-                  label: proveedor.codigo_entidad,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/proveedores"
-              postApiEndpoint="http://localhost:5000/Producto/add"
-              value={selectedProveedor}
-              onChange={handleProveedorChange}
-            />
-
-
-          </FormSection>
-        </div>
-        <div className="ml-1">
-          <FormSection title="Comprador">            
-            <SelectField
-              label="Nombre"
-              id="nombreComprador"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...compradores.map((comprador) => ({
-                  value: comprador.id_comprador,
-                  label: comprador.nombre_comprador,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/compradores"
-              postApiEndpoint="http://localhost:5000/crear_comprador"
-              value={selectedComprador}
-              onChange={handleCompradorChange}
-            />
-            <SelectField
-              label="Código"
-              id="codigoComprador"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...compradores.map((comprador) => ({
-                  value: comprador.id_comprador,
-                  label: comprador.codigo_comprador,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/compradores"
-              postApiEndpoint="http://localhost:5000/crear_comprador"
-              value={selectedComprador}
-              onChange={handleCompradorChange}
-            />
-          </FormSection>
-        </div>
-      </section>
-
-      <section>
-        <FormSection title="Material">
-          <div className="grid grid-cols-2 gap-1">          
-
-            <SelectField
-              label="Origen"              
-              id="nombreOrigen"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...origenes.map((origen) => ({
-                  value: origen.id_origen,
-                  label: origen.nombre_origen,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/origenes"
-              postApiEndpoint="http://localhost:5000/crear_origen"
-              value={selectedOrigen}
-              onChange={handleOrigenChange}
-            />
-
-            <SelectField
-              label="Patio"
-              id="nombrePatio"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...patios.map((patio) => ({
-                  value: patio.id_patio,
-                  label: patio.nombre_patio,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/patios"
-              postApiEndpoint="http://localhost:5000/crear_patio"
-              value={selectedPatio}
-              onChange={handlePatioChange}
-            />
-            
-            <SelectField
-              label="Código"
-              id="codigoProducto"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...productos.map((producto) => ({
-                  value: producto.id_producto,
-                  label: producto.codigo_producto,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/productos"
-              postApiEndpoint="http://localhost:5000/crear_producto"
-              value={selectedProducto}
-              onChange={handleProductoChange}
-            />
-            <SelectField
-              label="Producto"
-              id="nombreProducto"
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...productos.map((producto) => ({
-                  value: producto.id_producto,
-                  label: producto.nombre_producto,
-                })),
-              ]}
-              apiEndpoint="http://localhost:5000/productos"
-              postApiEndpoint="http://localhost:5000/crear_producto"
-              value={selectedProducto}
-              onChange={handleProductoChange}
-            />
-
-          </div>
+    <div className="subform">
+      {/* ── Proveedor / Comprador ── */}
+      <div className="subform__grid-2">
+        <FormSection title="Proveedor" icon="bi-building">
+          <SelectField
+            label="Nombre"
+            id="nombreProveedor"
+            options={optsProveedor}
+            value={selectedProveedor}
+            onChange={handleProveedorChange}
+            onAddNew={onAddProveedor}
+            addNewFields={[
+              { key: "nombre",  label: "Nombre"  },
+              { key: "codigo",  label: "Código"  },
+            ]}
+          />
+          <SelectField
+            label="Código"
+            id="codigoProveedor"
+            options={optsProvCodigo}
+            value={selectedProveedor}
+            onChange={handleProveedorChange}
+          />
         </FormSection>
-      </section>
-    </>
 
+        <FormSection title="Comprador" icon="bi-person-check">
+          <SelectField
+            label="Nombre"
+            id="nombreComprador"
+            options={optsComprador}
+            value={selectedComprador}
+            onChange={handleCompradorChange}
+            onAddNew={onAddComprador}
+            addNewFields={[
+              { key: "nombre",  label: "Nombre"  },
+              { key: "codigo",  label: "Código"  },
+            ]}
+          />
+          <SelectField
+            label="Código"
+            id="codigoComprador"
+            options={optsCompCodigo}
+            value={selectedComprador}
+            onChange={handleCompradorChange}
+          />
+        </FormSection>
+      </div>
 
+      {/* ── Material ── */}
+      <FormSection title="Material" icon="bi-box-seam">
+        <div className="subform__grid-material">
+          <SelectField
+            label="Origen"
+            id="origen"
+            options={optsOrigen}
+            value={selectedOrigen}
+            onChange={handleOrigenChange}
+            onAddNew={onAddOrigen}
+            addNewFields={[{ key: "nombre", label: "Nombre" }]}
+          />
+          <SelectField
+            label="Patio"
+            id="patio"
+            options={optsPatio}
+            value={selectedPatio}
+            onChange={handlePatioChange}
+            onAddNew={onAddPatio}
+            addNewFields={[{ key: "nombre", label: "Nombre" }]}
+          />
+          <SelectField
+            label="Código"
+            id="codigoProducto"
+            options={optsProdCodigo}
+            value={selectedProducto}
+            onChange={handleProductoChange}
+          />
+          <SelectField
+            label="Producto"
+            id="nombreProducto"
+            options={optsProducto}
+            value={selectedProducto}
+            onChange={handleProductoChange}
+            onAddNew={onAddProducto}
+            addNewFields={[
+              { key: "nombre", label: "Nombre" },
+              { key: "codigo", label: "Código" },
+            ]}
+          />
+        </div>
+      </FormSection>
+
+      <Notification
+        message={notif.message}
+        type={notif.type}
+        onClose={() => setNotif({ message: "", type: "" })}
+      />
+    </div>
   );
 });
 
+IngresoForm.displayName = "IngresoForm";
 export default IngresoForm;

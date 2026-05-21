@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   IngresoForm.css / DespachoForm.css / ServiciosForm.css
+   Compartido por los tres subformularios
+   Proyecto Ocean — Sistema de pesaje
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Layout general de subformulario ─────────────────────────────────────── */
+.subform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ── Grid de dos columnas (proveedor / comprador) ────────────────────────── */
+.subform__grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+/* ── Grid de dos columnas para material ──────────────────────────────────── */
+.subform__grid-material {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* ── Campo extra (unidad, cantidad, orden, precinto) ─────────────────────── */
+.subform__extra-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.subform__extra-label {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semi);
+  color: var(--text-primary);
+  width: 28%;
+  min-width: 28%;
+  flex-shrink: 0;
+}
+
+.subform__extra-input {
+  flex: 1;
+  height: 30px;
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.subform__extra-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(109, 128, 166, 0.15);
+}
+
+.subform__extra-input[readonly] {
+  background-color: var(--bg-surface-2);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+/* Textarea (precintos) */
+.subform__extra-textarea {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  outline: none;
+  resize: none;
+  min-height: 48px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.subform__extra-textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(109, 128, 166, 0.15);
+}
+
+/* ── Despacho: transportadora en fila con orden ──────────────────────────── */
+.subform__transp-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.subform__transp-select {
+  flex: 1;
+}
+
+.subform__transp-orden {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .subform__grid-2,
+  .subform__grid-material {
+    grid-template-columns: 1fr;
+  }
+
+  .subform__transp-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .subform__transp-orden {
+    width: 100%;
+  }
+}

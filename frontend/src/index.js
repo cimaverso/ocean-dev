@@ -1,21 +1,31 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router } from 'react-router-dom';
-import './index.css';
-import reportWebVitals from './reportWebVitals';
-import App from './App';
-import { AuthProvider } from './context/AuthContext';
+/**
+ * index.js
+ * Proyecto Ocean — Sistema de pesaje
+ *
+ * Punto de entrada de la aplicación React.
+ * Importa estilos globales y Bootstrap Icons antes de montar el árbol.
+ */
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+
+// ── Estilos globales ──────────────────────────────────────────────────────
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "./index.css";
+
+// ── App ───────────────────────────────────────────────────────────────────
+import App from "./App";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
 root.render(
   <React.StrictMode>
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   </React.StrictMode>
 );
-
-reportWebVitals();
-

@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TiqueteForm.css
+   Proyecto Ocean — Sistema de pesaje
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Contenedor principal ────────────────────────────────────────────────── */
+.tiquete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Barra superior: registro, tiquete, tipo, factura ────────────────────── */
+.tiquete__topbar {
+  display: grid;
+  grid-template-columns: auto auto 1fr 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-4);
+}
+
+/* ── Campo registro/tiquete ──────────────────────────────────────────────── */
+.tiquete__id-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tiquete__id-label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semi);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.tiquete__id-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: var(--fw-bold);
+  color: var(--ocean-800);
+  background-color: var(--ocean-100);
+  border: 1px solid var(--ocean-200);
+  border-radius: var(--radius-md);
+  padding: 2px var(--space-3);
+  min-width: 60px;
+  text-align: center;
+}
+
+[data-theme="dark"] .tiquete__id-value {
+  color: var(--text-inverse);
+  background-color: var(--ocean-700);
+  border-color: var(--ocean-600);
+}
+
+.tiquete__id-separator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-default);
+  flex-shrink: 0;
+}
+
+/* ── Sección de vehículo ─────────────────────────────────────────────────── */
+.tiquete__vehicle-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr 1fr;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+/* ── Sección báscula ─────────────────────────────────────────────────────── */
+.tiquete__bascula-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  align-items: end;
+}
+
+/* ── Peso neto destacado ─────────────────────────────────────────────────── */
+.tiquete__peso-neto {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--ocean-100);
+  border: 1.5px solid var(--ocean-200);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-1);
+}
+
+[data-theme="dark"] .tiquete__peso-neto {
+  background-color: var(--ocean-700);
+  border-color: var(--ocean-600);
+}
+
+.tiquete__peso-neto-label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semi);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.tiquete__peso-neto-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-black);
+  color: var(--ocean-800);
+  flex: 1;
+  text-align: right;
+}
+
+[data-theme="dark"] .tiquete__peso-neto-value {
+  color: var(--text-inverse);
+}
+
+.tiquete__peso-neto-unit {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
+}
+
+/* ── Barra de acciones inferior ──────────────────────────────────────────── */
+.tiquete__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.tiquete__actions-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tiquete__actions-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ── Botones de acción ───────────────────────────────────────────────────── */
+.tiquete__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semi);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.tiquete__btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.tiquete__btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.tiquete__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Variantes */
+.tiquete__btn--primary {
+  background-color: var(--ocean-800);
+  color: #FFFFFF;
+}
+.tiquete__btn--primary:hover:not(:disabled) {
+  background-color: var(--ocean-700);
+}
+
+.tiquete__btn--success {
+  background-color: var(--success);
+  color: #FFFFFF;
+}
+.tiquete__btn--success:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.tiquete__btn--secondary {
+  background-color: var(--bg-surface-2);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-default);
+}
+.tiquete__btn--secondary:hover:not(:disabled) {
+  background-color: var(--bg-surface-3);
+  border-color: var(--border-strong);
+}
+
+.tiquete__btn--danger {
+  background-color: var(--error-bg);
+  color: var(--error);
+  border: 1.5px solid var(--error-border);
+}
+.tiquete__btn--danger:hover:not(:disabled) {
+  background-color: var(--error);
+  color: #FFFFFF;
+}
+
+/* Spinner en botón */
+.tiquete__btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .tiquete__topbar {
+    grid-template-columns: auto auto 1fr;
+  }
+
+  .tiquete__vehicle-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .tiquete {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .tiquete__topbar {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+  }
+
+  .tiquete__vehicle-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tiquete__bascula-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tiquete__actions {
+    flex-direction: column;
+  }
+
+  .tiquete__actions-left,
+  .tiquete__actions-right {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .tiquete__btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

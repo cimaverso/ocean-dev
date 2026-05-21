@@ -25,23 +25,20 @@ def crear_token(usuario_nombre: str, usuario_id: int, rol_nombre: str, expires_d
 
 def crear_tokens(usuario_nombre: str, usuario_id: int, rol_nombre: str) -> Dict[str, str]:
     access_token = crear_token(
-        usuario_nombre,
-        usuario_id,
-        rol_nombre,
-        timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
-        'access'
+        usuario_nombre, usuario_id, rol_nombre,
+        timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES), 'access'
     )
     refresh_token = crear_token(
-        usuario_nombre,
-        usuario_id,
-        rol_nombre,
-        timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        'refresh'
+        usuario_nombre, usuario_id, rol_nombre,
+        timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS), 'refresh'
     )
     return {
-        "access_token": access_token,
+        "access_token":  access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer"
+        "token_type":    "bearer",
+        "username":      usuario_nombre,
+        "user_id":       usuario_id,
+        "role":          rol_nombre,
     }
 
 def verificar_password(clave_plana: str, clave_hash: str) -> bool:

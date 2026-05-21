@@ -1,64 +1,133 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import {
-  HomeIcon,
-  NewspaperIcon,
-  DocumentMagnifyingGlassIcon,
-  ChatBubbleLeftRightIcon,
-} from "@heroicons/react/24/solid";
-import { useAuth } from "../../context/AuthContext";
-import logo from "../../assets/LogOcean.png";
-import smallLogo from "../../assets/LogOcean.png";
-import footerLogo from "../../assets/LogoFooter.png";
-import smallFooterLogo from "../../assets/Icono Principal Azul.png";
+/**
+ * Sidebar.jsx
+ * Proyecto Ocean — Sistema de pesaje
+ *
+ * - Colapsable: persiste estado en localStorage
+ * - Íconos: Bootstrap Icons (npm install bootstrap-icons)
+ * - Tooltips automáticos cuando está colapsado
+ * - Ítem activo detectado por ruta actual
+ */
 
+import React, { useState, useEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import logoOcean from "../../assets/logo.png"; // ajusta si el nombre difiere
+import "./Sidebar.css";
 
+// ── Definición de navegación ──────────────────────────────────────────────────
+const NAV_ITEMS = [
+  {
+    section: "Principal",
+    items: [
+      {
+        to:      "/inicio",
+        label:   "Inicio",
+        icon:    "bi-house",
+        tooltip: "Inicio",
+      },
+      {
+        to:      "/registro",
+        label:   "Registro",
+        icon:    "bi-journal-text",
+        tooltip: "Registro",
+      },
+      {
+        to:      "/formulario",
+        label:   "Formulario",
+        icon:    "bi-file-earmark-plus",
+        tooltip: "Formulario",
+      },
+    ],
+  },
+  {
+    section: "Consultas",
+    items: [
+      {
+        to:      "/consultas",
+        label:   "Consultas",
+        icon:    "bi-search",
+        tooltip: "Consultas",
+      },
+      {
+        to:      "/soporte",
+        label:   "Soporte",
+        icon:    "bi-headset",
+        tooltip: "Soporte",
+      },
+    ],
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const Sidebar = () => {
-  const { userRole } = useAuth();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
+
+  // Persistir estado de colapso
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", String(collapsed));
+  }, [collapsed]);
+
+  const toggleCollapse = () => setCollapsed((prev) => !prev);
 
   return (
-    <div className={`h-screen bg-[#182540] text-white flex flex-col justify-between transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"}`}>
-      <div>
-        <div className="flex flex-col items-center p-4 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-          <div className={`bg-[#F2F2F2] rounded-full overflow-hidden flex items-center justify-center shadow-lg transition-all duration-300 ${isCollapsed ? "w-16 h-16" : "w-40 h-40"}`}>
-            <img
-              src={isCollapsed ? smallLogo : logo}
-              alt="Logo Ocean Coal"
-              className={`object-contain transition-all duration-300 ${isCollapsed ? "w-12 h-12" : "w-32 h-32"}`}
-            />
-          </div>
-        </div>
-        <nav className="flex flex-col space-y-4 p-2">
-          {[{
-            to: "/inicio", icon: HomeIcon, label: "INICIO"
-          }, {
-            to: "/registro", icon: NewspaperIcon, label: "REGISTRO"
-          }, {
-            to: "/consultas", icon: DocumentMagnifyingGlassIcon, label: "CONSULTAS"
-          }, {
-            to: "/soporte", icon: ChatBubbleLeftRightIcon, label: "SOPORTE"
-          }].map(({ to, icon: Icon, label }) => (
-            <Link key={to} to={to} className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"} py-2 px-4 rounded font-semibold transition-all duration-300 ${location.pathname === to ? "bg-gray-300 text-[#182540]" : "hover:bg-gray-300 hover:text-[#182540]"}`}>
-              <div className="relative group">
-                <Icon className="w-6 mx-auto" />
-                {isCollapsed && (
-                  <span className="absolute left-full ml-2 px-2 py-1 text-xs bg-black text-white rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {label}
-                  </span>
-                )}
-              </div>
-              {!isCollapsed && <p>{label}</p>}
-            </Link>
-          ))}
-        </nav>
+    <aside
+      className={`sidebar${collapsed ? " sidebar--collapsed" : ""}`}
+      aria-label="Navegación principal"
+    >
+      {/* ── Marca ── */}
+      <div className="sidebar__brand">
+        <img
+          src={logoOcean}
+          alt="Ocean"
+          className="sidebar__brand-logo"
+        />
+        <span className="sidebar__brand-name">Ocean</span>
       </div>
-      <footer className="p-4 flex justify-center">
-        <img src={isCollapsed ? smallFooterLogo : footerLogo} className={`transition-all duration-300 ${isCollapsed ? "w-10" : "w-3/5"}`} alt="Logo Footer" />
-      </footer>
-    </div>
+
+      {/* ── Navegación ── */}
+      <nav className="sidebar__nav" aria-label="Menú principal">
+        {NAV_ITEMS.map(({ section, items }) => (
+          <div key={section}>
+            <div className="sidebar__section-label">{section}</div>
+
+            {items.map(({ to, label, icon, tooltip }) => {
+              const isActive = location.pathname.startsWith(to);
+
+              return (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={`sidebar__item${isActive ? " sidebar__item--active" : ""}`}
+                  data-tooltip={tooltip}
+                  aria-label={collapsed ? label : undefined}
+                  aria-current={isActive ? "page" : undefined}
+                  end={to === "/inicio"}
+                >
+                  <i className={`bi ${icon} sidebar__icon`} aria-hidden="true" />
+                  <span className="sidebar__label">{label}</span>
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* ── Footer: botón colapsar ── */}
+      <div className="sidebar__footer">
+        <button
+          className="sidebar__collapse-btn"
+          onClick={toggleCollapse}
+          aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+          title={collapsed ? "Expandir" : "Colapsar"}
+        >
+          <i className="bi bi-chevron-left" aria-hidden="true" />
+        </button>
+      </div>
+    </aside>
   );
 };
 

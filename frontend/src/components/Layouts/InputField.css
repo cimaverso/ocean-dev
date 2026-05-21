@@ -1,0 +1,208 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   InputField.css
+   Proyecto Ocean — Sistema de pesaje
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Contenedor ──────────────────────────────────────────────────────────── */
+.input-field {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-1) 0;
+  gap: var(--space-2);
+}
+
+.input-field--column {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+/* ── Label ───────────────────────────────────────────────────────────────── */
+.input-field__label {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semi);
+  color: var(--text-primary);
+  width: 28%;
+  min-width: 28%;
+  flex-shrink: 0;
+  line-height: 1.3;
+}
+
+.input-field--column .input-field__label {
+  width: 100%;
+  min-width: unset;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+/* ── Wrapper del input (para ícono y sufijo) ─────────────────────────────── */
+.input-field__wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.input-field--column .input-field__wrapper {
+  width: 100%;
+}
+
+/* ── Input base ──────────────────────────────────────────────────────────── */
+.input-field__input {
+  width: 100%;
+  height: 30px;
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-3);
+  outline: none;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-normal);
+}
+
+.input-field__input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(109, 128, 166, 0.18);
+}
+
+.input-field__input:disabled {
+  background-color: var(--bg-surface-2);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.input-field__input[readonly] {
+  background-color: var(--bg-surface-2);
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+/* ── Con ícono a la izquierda ────────────────────────────────────────────── */
+.input-field__wrapper--icon-left .input-field__input {
+  padding-left: var(--space-8);
+}
+
+.input-field__icon-left {
+  position: absolute;
+  left: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Con botón de acción a la derecha (ej: báscula) ─────────────────────── */
+.input-field__wrapper--action .input-field__input {
+  padding-right: var(--space-8);
+}
+
+.input-field__action-btn {
+  position: absolute;
+  right: var(--space-1);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.input-field__action-btn:hover {
+  color: var(--ocean-800);
+  background-color: var(--bg-overlay);
+}
+
+.input-field__action-btn i {
+  font-size: 0.9rem;
+}
+
+/* ── Variante número (mono) ──────────────────────────────────────────────── */
+.input-field__input--number {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+}
+
+/* ── Variante readonly destacada (peso neto, registro) ───────────────────── */
+.input-field__input--highlight {
+  background-color: var(--ocean-100);
+  color: var(--ocean-800);
+  font-weight: var(--fw-semi);
+  font-family: var(--font-mono);
+  border-color: var(--ocean-200);
+}
+
+[data-theme="dark"] .input-field__input--highlight {
+  background-color: var(--ocean-700);
+  color: var(--text-inverse);
+  border-color: var(--ocean-600);
+}
+
+/* ── Textarea ────────────────────────────────────────────────────────────── */
+.input-field__textarea {
+  width: 100%;
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.input-field__textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(109, 128, 166, 0.18);
+}
+
+/* ── Mensaje de error / ayuda ────────────────────────────────────────────── */
+.input-field__hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+  width: 100%;
+}
+
+.input-field__error {
+  font-size: var(--text-xs);
+  color: var(--error);
+  margin-top: 2px;
+  width: 100%;
+}
+
+/* ── Estado error en input ───────────────────────────────────────────────── */
+.input-field__input--error {
+  border-color: var(--error) !important;
+}
+
+.input-field__input--error:focus {
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15) !important;
+}

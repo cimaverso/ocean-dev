@@ -1,5 +1,23 @@
-.env
-.venv/
+# Node
+node_modules/
+
+# Frontend builds
+frontend/dist/
+frontend/build/
+release/
+
+# Python
 __pycache__/
 *.pyc
-node_modules/
+.venv/
+env/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+.env
+.env.*

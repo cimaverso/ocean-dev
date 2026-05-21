@@ -1,26 +1,56 @@
+/**
+ * BotonesVista.jsx
+ * Proyecto Ocean — Sistema de pesaje
+ *
+ * Props:
+ *   showTransito  {Function} — Activa vista tránsito
+ *   showHistorial {Function} — Activa vista historial
+ *   viewType      {string}   — "transito" | "historial"
+ *   countTransito {number}   — Cantidad de registros en tránsito
+ *   countHistorial{number}   — Cantidad de registros en historial
+ */
 
-const BotonesVista = ({ showTransito, showHistorial, viewType }) => (
-  <div className="flex content-center h-[7%] m-3 p-1 gap-4 overflow-auto">
+import React from "react";
+import "./BotonesVista.css";
+
+const BotonesVista = ({
+  showTransito,
+  showHistorial,
+  viewType,
+  countTransito  = null,
+  countHistorial = null,
+}) => (
+  <div className="vista-tabs" role="tablist" aria-label="Vista de registros">
+    {/* ── Tránsito ── */}
     <button
+      role="tab"
+      aria-selected={viewType === "transito"}
+      className={`vista-tab${viewType === "transito" ? " vista-tab--active" : ""}`}
       onClick={showTransito}
-      className={`w-1/4 rounded text-2xl font-bold ${
-        viewType === "transito"
-          ? "bg-[#182540] text-white"
-          : "bg-gray-200 text-[#182540]"
-      }`}
     >
+      <span className="vista-tab__icon">
+        <i className="bi bi-truck" aria-hidden="true" />
+      </span>
       Tránsito
+      {countTransito !== null && (
+        <span className="vista-tab__badge">{countTransito}</span>
+      )}
     </button>
 
+    {/* ── Historial ── */}
     <button
+      role="tab"
+      aria-selected={viewType === "historial"}
+      className={`vista-tab${viewType === "historial" ? " vista-tab--active" : ""}`}
       onClick={showHistorial}
-      className={`w-1/4 rounded text-2xl font-bold ${
-        viewType === "historial"
-          ? "bg-[#182540] text-white"
-          : "bg-gray-200 text-[#182540]"
-      }`}
     >
+      <span className="vista-tab__icon">
+        <i className="bi bi-clock-history" aria-hidden="true" />
+      </span>
       Historial
+      {countHistorial !== null && (
+        <span className="vista-tab__badge">{countHistorial}</span>
+      )}
     </button>
   </div>
 );

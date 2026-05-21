@@ -1,108 +1,213 @@
-import { useState, useEffect } from "react";
+/**
+ * Login.jsx
+ * Proyecto Ocean — Sistema de pesaje
+ *
+ * Layout dividido:
+ *   Izquierda — panel de marca con logo, animación, patrón geométrico
+ *   Derecha   — formulario de autenticación
+ *
+ * Sin dependencias externas de UI — solo AuthContext + react-router
+ */
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import background1 from "../assets/acopio.jpg";
-import background2 from "../assets/carbon.jpg";
-import logo from "../assets/Logo.png";
-import { AiOutlineCloseCircle } from "react-icons/ai";
+import logoOcean from "../assets/logo.png";
+import "./Login.css";
 
 const Login = () => {
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-  });
+  const navigate              = useNavigate();
   const { login, authError, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const [loginSuccess, setLoginSuccess] = useState(false);
 
+  const [username,    setUsername]    = useState("");
+  const [password,    setPassword]    = useState("");
+  const [showPass,    setShowPass]    = useState(false);
+  const [isLoading,   setIsLoading]   = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  // Redirigir si ya está autenticado
   useEffect(() => {
-    if (isAuthenticated) {
-      setLoginSuccess(true);
-      navigate('/inicio');
-    } else if (authError) {
-      setLoginSuccess(false);
-    }
-  }, [isAuthenticated, authError, navigate]);
+    if (isAuthenticated) navigate("/inicio", { replace: true });
+  }, [isAuthenticated, navigate]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCredentials({ ...credentials, [name]: value });
+  // ── Validación local ────────────────────────────────────────────────────
+  const validate = () => {
+    const errors = {};
+    if (!username.trim()) errors.username = "Campo requerido";
+    if (!password)        errors.password = "Campo requerido";
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleLogin = (event) => {
-    event.preventDefault();
-    login(credentials);
+  // ── Submit ──────────────────────────────────────────────────────────────
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      await login({ username: username.trim(), password });
+      // La redirección la maneja el useEffect de isAuthenticated
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSubmit(e);
   };
 
   return (
-    <div className="flex justify-start">
-      <div className="w-1/2">
-        <div
-          className="flex items-center justify-center h-screen bg-cover bg-center"
-          style={{ backgroundImage: `url(${background1})` }}
-        ></div>
+    <div className="login">
+      {/* ══════════════════════════════════════════════
+          Panel izquierdo — Marca
+      ══════════════════════════════════════════════ */}
+      <div className="login__brand" aria-hidden="true">
+        {/* Decoración */}
+        <div className="login__brand-dots" />
+        <div className="login__brand-circle login__brand-circle--1" />
+        <div className="login__brand-circle login__brand-circle--2" />
+
+        {/* Contenido */}
+        <div className="login__brand-content">
+          <img src={logoOcean} alt="Ocean" className="login__logo" />
+
+          <div>
+            <h1 className="login__brand-title">Ocean</h1>
+            <p className="login__brand-subtitle">Sistema de pesaje</p>
+          </div>
+
+          <div className="login__brand-divider" />
+
+          <p className="login__brand-tagline">
+            Control de ingresos, despachos y servicios de tractocarga
+          </p>
+        </div>
       </div>
 
-      <div className="w-1/2">
-        <div
-          className="flex items-center justify-center h-screen bg-cover opacity-80"
-          style={{ backgroundImage: `url(${background2})` }}
-        >
-          <div className="bg-opacity-60 bg-gray-50 rounded-3xl backdrop-blur-sm text-white shadow-lg shadow-white w-5/6 h-auto p-10 content-center">
-            <div className="flex justify-center">
-              <img src={logo} alt="Logo" />
-            </div>
+      {/* ══════════════════════════════════════════════
+          Panel derecho — Formulario
+      ══════════════════════════════════════════════ */}
+      <div className="login__form-panel">
+        <div className="login__form-container">
 
-            <div className="flex justify-center">
-              <div className="flex flex-col items-center w-5/6 rounded-lg space-y-10">
-                <form className="w-5/6 flex flex-col" onSubmit={handleLogin}>
-                  <label
-                    htmlFor="username"
-                    className="text-lg font-bold text-white font-montserrat"
-                  >
-                    USUARIO
-                  </label>
+          {/* Encabezado */}
+          <div className="login__form-header">
+            <p className="login__form-greeting">Bienvenido</p>
+            <h2 className="login__form-title">Inicia sesión</h2>
+          </div>
+
+          {/* Formulario */}
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="login__fields">
+
+              {/* Usuario */}
+              <div className="login__field">
+                <label className="login__field-label" htmlFor="username">
+                  Usuario
+                </label>
+                <div className="login__field-wrapper">
                   <input
-                    type="text"
                     id="username"
-                    name="username"
-                    value={credentials.username}
-                    onChange={handleChange}
-                    placeholder="USUARIO"
-                    className="px-3 py-2  text-gray-700 font-montserrat text-sm bg-gray-200 rounded focus:outline-none focus:bg-white"
+                    type="text"
+                    className={`login__field-input${fieldErrors.username ? " login__field-input--error" : ""}`}
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (fieldErrors.username) setFieldErrors((p) => ({ ...p, username: "" }));
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Nombre de usuario"
+                    autoComplete="username"
+                    autoFocus
+                    disabled={isLoading}
+                    aria-invalid={Boolean(fieldErrors.username)}
                   />
-                  <label
-                    htmlFor="password"
-                    className="text-lg font-bold text-white font-montserrat mt-4"
-                  >
-                    CONTRASEÑA
-                  </label>
+                  <span className="login__field-icon">
+                    <i className="bi bi-person" aria-hidden="true" />
+                  </span>
+                </div>
+                {fieldErrors.username && (
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--error)" }}>
+                    {fieldErrors.username}
+                  </span>
+                )}
+              </div>
+
+              {/* Contraseña */}
+              <div className="login__field">
+                <label className="login__field-label" htmlFor="password">
+                  Contraseña
+                </label>
+                <div className="login__field-wrapper">
                   <input
-                    type="password"
                     id="password"
-                    name="password"
-                    value={credentials.password}
-                    onChange={handleChange}
-                    placeholder="CONTRASEÑA"
-                    className="px-3 py-2 text-gray-700 font-montserrat text-sm bg-gray-200 rounded focus:outline-none focus:bg-white"
+                    type={showPass ? "text" : "password"}
+                    className={`login__field-input${fieldErrors.password ? " login__field-input--error" : ""}`}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: "" }));
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    disabled={isLoading}
+                    aria-invalid={Boolean(fieldErrors.password)}
                   />
-                  <div className="flex justify-center mt-4">
-                    <button
-                      type="submit"
-                      className="w-4/5 mt-6 font-montserrat text-[#182540] bg-[#F2F2F2] shadow-lg hover:shadow-[#182540] font-bold py-2 px-4 rounded"
-                    >
-                      INGRESAR
-                    </button>
-                  </div>
-                </form>
-                {authError && (
-                  <div className="flex items-center mt-4 text-red-500">
-                    <AiOutlineCloseCircle className="mr-2" />
-                    {authError}
-                  </div>
-                )}                
+                  <span className="login__field-icon">
+                    <i className="bi bi-lock" aria-hidden="true" />
+                  </span>
+                  <button
+                    type="button"
+                    className="login__field-toggle"
+                    onClick={() => setShowPass((p) => !p)}
+                    aria-label={showPass ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    tabIndex={-1}
+                  >
+                    <i className={`bi ${showPass ? "bi-eye-slash" : "bi-eye"}`} aria-hidden="true" />
+                  </button>
+                </div>
+                {fieldErrors.password && (
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--error)" }}>
+                    {fieldErrors.password}
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* Error del backend */}
+            {authError && (
+              <div className="login__error" role="alert">
+                <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="login__submit"
+              disabled={isLoading}
+              style={{ marginTop: authError ? "var(--space-4)" : "0" }}
+            >
+              {isLoading ? (
+                <>
+                  <span className="login__spinner" aria-hidden="true" />
+                  Verificando...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-box-arrow-in-right" aria-hidden="true" />
+                  Ingresar
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="login__form-footer">
+            Ocean &copy; {new Date().getFullYear()} — Sistema de pesaje
           </div>
         </div>
       </div>

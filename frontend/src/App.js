@@ -1,54 +1,67 @@
-import React, { useEffect } from 'react'; 
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import Consultas from './pages/Consultas';
-import Formulario from './pages/Formulario';
-import IngresoForm from './components/IngresoForm';
-import DespachoForm from './components/DespachoForm';
-import ServiciosForm from './components/ServiciosForm';
-import Inicio from './pages/Inicio';
-import Registro from './pages/Registro';
-import Soporte from './pages/Soporte';
+/**
+ * App.js
+ * Proyecto Ocean — Sistema de pesaje
+ *
+ * - Aplica el tema (dark/light) desde localStorage al montar
+ * - Rutas protegidas por isAuthenticated
+ * - Logout via Electron onLogout
+ * - routes.js eliminado — todo el routing vive aquí
+ */
 
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
+import Login     from "./pages/Login";
+import Inicio    from "./pages/Inicio";
+import Registro  from "./pages/Registro";
+import Consultas from "./pages/Consultas";
+import Formulario from "./pages/Formulario";
+import Soporte   from "./pages/Soporte";
 
 const App = () => {
-  const { isAuthenticated } = useAuth();
-  const { logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
 
+  // ── Aplicar tema guardado al montar ──────────────────────────────────────
   useEffect(() => {
-    if (window.electron) {
-      window.electron.onLogout(() => {
-        // Llamar al método logout del contexto
-        logout().then(() => {
-          window.close(); // Cierra la ventana después de cerrar sesión
-        });
-      });
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
     }
+  }, []);
+
+  // ── Logout desde Electron (botón nativo de la ventana) ───────────────────
+  useEffect(() => {
+    if (!window.electron) return;
+
+    window.electron.onLogout(async () => {
+      await logout();
+      window.close();
+    });
   }, [logout]);
 
- 
   return (
     <Routes>
+      {/* Pública */}
       <Route path="/login" element={<Login />} />
+
+      {/* Protegidas */}
       {isAuthenticated ? (
         <>
-          <Route path="/inicio" element={<Inicio />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/consultas" element={<Consultas />} />
+          <Route path="/inicio"    element={<Inicio />}     />
+          <Route path="/registro"  element={<Registro />}   />
+          <Route path="/consultas" element={<Consultas />}  />
           <Route path="/formulario" element={<Formulario />} />
-          <Route path="/soporte" element={<Soporte />} />
-          <Route path="/formulario/ingreso/:id" element={<IngresoForm />} />
-          <Route path="/formulario/despacho/:id" element={<DespachoForm />} />
-          <Route path="/formulario/servicios/:id" element={<ServiciosForm />} />
-          <Route path="*" element={<Navigate to="/inicio" />} />
+          <Route path="/soporte"   element={<Soporte />}    />
+          <Route path="*"          element={<Navigate to="/inicio" replace />} />
         </>
       ) : (
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       )}
     </Routes>
   );
 };
- 
+
 export default App;

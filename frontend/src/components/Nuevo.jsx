@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Notification from "../components/Layouts/Notificacion";
+import Notification from "./Layouts/Notificacion";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 
