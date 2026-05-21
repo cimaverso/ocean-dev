@@ -68,7 +68,7 @@ const ServiciosForm = forwardRef((
 
   // Actualizar unidad cuando cambia el servicio seleccionado
   useEffect(() => {
-    const serv = servicios.find((s) => s.id_producto === selectedServicio);
+    const serv = servicios.find((s) => s.id === selectedServicio);
     setUnidad(serv?.unidad_medida || "");
   }, [selectedServicio, servicios]);
 

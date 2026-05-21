@@ -39,7 +39,3 @@ def actualizar_producto(id: int, producto: ProductoUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return {"message": "Producto actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_producto(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not ProductoService(db).eliminar_producto(id):
-        raise HTTPException(status_code=404, detail="Producto no encontrado")

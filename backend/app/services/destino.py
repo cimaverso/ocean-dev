@@ -75,14 +75,4 @@ class DestinoService:
         self.db.refresh(destino_db)
         return destino_db
 
-    def eliminar_destino(self, id: int) -> bool:
-        destino_db = self.db.execute(
-            select(Destino).where(Destino.id == id)
-        ).scalar_one_or_none()
-
-        if not destino_db:
-            return False
-
-        self.db.delete(destino_db)
-        self.db.commit()
-        return True
+    

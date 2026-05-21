@@ -66,14 +66,4 @@ class TrailerService:
         self.db.refresh(trailer_db)
         return trailer_db
 
-    def eliminar_trailer(self, id: int) -> bool:
-        trailer_db = self.db.execute(
-            select(Trailer).where(Trailer.id == id)
-        ).scalar_one_or_none()
-
-        if not trailer_db:
-            return False
-
-        self.db.delete(trailer_db)
-        self.db.commit()
-        return True
+    

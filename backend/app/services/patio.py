@@ -74,15 +74,3 @@ class PatioService:
         self.db.commit()
         self.db.refresh(patio_db)
         return patio_db
-
-    def eliminar_patio(self, id: int) -> bool:
-        patio_db = self.db.execute(
-            select(Patio).where(Patio.id == id)
-        ).scalar_one_or_none()
-
-        if not patio_db:
-            return False
-
-        self.db.delete(patio_db)
-        self.db.commit()
-        return True

@@ -39,7 +39,3 @@ def actualizar_entidad(id: int, entidad: EntidadUpdate, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Entidad no encontrada")
     return {"message": "Entidad actualizada exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_entidad(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not EntidadService(db).eliminar_entidad(id):
-        raise HTTPException(status_code=404, detail="Entidad no encontrada")

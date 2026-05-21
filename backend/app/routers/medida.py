@@ -38,7 +38,3 @@ def actualizar_medida(id: int, medida: UnidadMedidaUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="Medida no encontrada")
     return {"message": "Medida actualizada exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_medida(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not UnidadMedidaService(db).eliminar_medida(id):
-        raise HTTPException(status_code=404, detail="Medida no encontrada")

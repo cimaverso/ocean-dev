@@ -1,11 +1,3 @@
-/**
- * DespachoForm.jsx
- * Proyecto Ocean — Sistema de pesaje
- *
- * Subformulario para registros de tipo DESPACHO.
- * Sin fetch propio — catálogos vienen de TiqueteForm via props.
- */
-
 import React, {
   useState,
   forwardRef,

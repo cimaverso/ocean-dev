@@ -89,14 +89,4 @@ class EntidadService:
         self.db.refresh(entidad_db)
         return entidad_db
 
-    def eliminar_entidad(self, id: int) -> bool:
-        entidad_db = self.db.execute(
-            select(Entidad).where(Entidad.id == id)
-        ).scalar_one_or_none()
-
-        if not entidad_db:
-            return False
-
-        self.db.delete(entidad_db)
-        self.db.commit()
-        return True
+    

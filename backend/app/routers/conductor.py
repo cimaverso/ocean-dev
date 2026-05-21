@@ -38,7 +38,3 @@ def actualizar_conductor(id: int, conductor: ConductorUpdate, db: Session = Depe
         raise HTTPException(status_code=404, detail="Conductor no encontrado")
     return {"message": "Conductor actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_conductor(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-    if not ConductorService(db).eliminar_conductor(id):
-        raise HTTPException(status_code=404, detail="Conductor no encontrado")

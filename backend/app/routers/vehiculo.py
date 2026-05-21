@@ -38,7 +38,3 @@ def actualizar_vehiculo(id: int, vehiculo: VehiculoUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="Vehiculo no encontrado")
     return {"message": "Vehiculo actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_vehiculo(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not VehiculoService(db).eliminar_vehiculo(id):
-        raise HTTPException(status_code=404, detail="Vehiculo no encontrado")

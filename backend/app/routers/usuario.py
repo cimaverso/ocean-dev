@@ -28,7 +28,3 @@ def actualizar_usuario(id: int, usuario_data: UsuarioUpdate, db: Session = Depen
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"message": "Usuario actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_usuario(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-    if not UsuarioService(db).eliminar_usuario(id):
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")

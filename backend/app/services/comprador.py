@@ -79,13 +79,4 @@ class CompradorService:
         self.db.refresh(comprador_db)
         return comprador_db
 
-    def eliminar_comprador(self, id: int):
-        comprador_db = self.db.execute(
-            select(Comprador).where(Comprador.id == id)
-        ).scalar_one_or_none()
-
-        if comprador_db:
-            self.db.delete(comprador_db)
-            self.db.commit()
-            return True
-        return False
+    

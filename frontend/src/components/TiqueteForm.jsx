@@ -578,28 +578,28 @@ const TiqueteForm = ({ formType: initialFormType = "", initialData = {} }) => {
             label="Placa"
             id="placa"
             options={vehicleOptions}
-            value={vehicleInfo.placa}
+            value={vehicleInfo.vehi_id}
             onChange={handlePlacaChange}
           />
           <SelectField
             label="Conductor"
             id="conductor"
             options={conductorOptions}
-            value={conductInfo.conductor}
+            value={conductInfo.conduct_id}
             onChange={handleConductorChange}
           />
           <SelectField
             label="Nro. Documento"
             id="cedula"
             options={cedulaOptions}
-            value={conductInfo.cedulaConductor}
+            value={conductInfo.conduct_id}
             onChange={handleCedulaChange}
           />
           <SelectField
             label="Trailer"
             id="trailer"
             options={trailerOptions}
-            value={trailerInfo.trailer}
+            value={trailerInfo.trai_id}
             onChange={handleTrailerChange}
           />
         </div>

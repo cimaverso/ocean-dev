@@ -71,14 +71,4 @@ class FacturaService:
         self.db.refresh(factura_db)
         return factura_db
 
-    def eliminar_factura(self, id: int) -> bool:
-        factura_db = self.db.execute(
-            select(Factura).where(Factura.id == id)
-        ).scalar_one_or_none()
-
-        if not factura_db:
-            return False
-
-        self.db.delete(factura_db)
-        self.db.commit()
-        return True
+    

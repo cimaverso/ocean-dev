@@ -66,14 +66,4 @@ class UnidadMedidaService:
         self.db.refresh(medida_db)
         return medida_db
 
-    def eliminar_medida(self, id: int) -> bool:
-        medida_db = self.db.execute(
-            select(UnidadMedida).where(UnidadMedida.id == id)
-        ).scalar_one_or_none()
-
-        if not medida_db:
-            return False
-
-        self.db.delete(medida_db)
-        self.db.commit()
-        return True
+    

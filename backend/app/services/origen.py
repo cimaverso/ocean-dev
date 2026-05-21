@@ -75,14 +75,4 @@ class OrigenService:
         self.db.refresh(origen_db)
         return origen_db
 
-    def eliminar_origen(self, id: int) -> bool:
-        origen_db = self.db.execute(
-            select(Origen).where(Origen.id == id)
-        ).scalar_one_or_none()
-
-        if not origen_db:
-            return False
-
-        self.db.delete(origen_db)
-        self.db.commit()
-        return True
+    

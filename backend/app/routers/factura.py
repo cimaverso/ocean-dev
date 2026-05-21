@@ -38,7 +38,3 @@ def actualizar_factura(id: int, factura: FacturaUpdate, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Factura no encontrada")
     return {"message": "Factura actualizada exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_factura(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not FacturaService(db).eliminar_factura(id):
-        raise HTTPException(status_code=404, detail="Factura no encontrada")

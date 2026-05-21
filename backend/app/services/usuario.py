@@ -48,14 +48,4 @@ class UsuarioService:
         self.db.refresh(usuario_db)
         return usuario_db
 
-    def eliminar_usuario(self, id: int) -> bool:
-        usuario_db = self.db.execute(
-            select(Usuario).where(Usuario.id == id)
-        ).scalar_one_or_none()
-
-        if not usuario_db:
-            return False
-
-        self.db.delete(usuario_db)
-        self.db.commit()
-        return True
+   

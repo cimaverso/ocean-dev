@@ -39,7 +39,3 @@ def actualizar_comprador(id: int, comprador: CompradorUpdate, db: Session = Depe
         raise HTTPException(status_code=404, detail="Comprador no encontrado")
     return {"message": "Comprador actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_comprador(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(["ADMINISTRADOR"]))):
-    if not CompradorService(db).eliminar_comprador(id):
-        raise HTTPException(status_code=404, detail="Comprador no encontrado")

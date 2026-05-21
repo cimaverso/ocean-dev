@@ -38,7 +38,3 @@ def actualizar_destino(id: int, destino: DestinoUpdate, db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Destino no encontrado")
     return {"message": "Destino actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_destino(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not DestinoService(db).eliminar_destino(id):
-        raise HTTPException(status_code=404, detail="Destino no encontrado")

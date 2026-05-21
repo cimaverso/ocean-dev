@@ -38,7 +38,3 @@ def actualizar_origen(id: int, origen: OrigenUpdate, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Origen no encontrado")
     return {"message": "Origen actualizado exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_origen(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not OrigenService(db).eliminar_origen(id):
-        raise HTTPException(status_code=404, detail="Origen no encontrado")

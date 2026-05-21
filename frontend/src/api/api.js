@@ -294,8 +294,10 @@ export const vehiculosAPI = {
 
 export const facturasAPI = {
   getFacturas: () => api.get("/factura/"),
-  getFacturaPorNumero: (numeroFactura) =>
-    api.get(`/factura?numero_factura=${numeroFactura}`),
+  getFacturaPorNumero: async (fecha) => {
+    const res = await api.get("/factura/");
+    return { data: res.data.find((f) => f.fecha === fecha) };
+  },
 };
 
 // ═════════════════════════════════════════════════════════════════════════════

@@ -77,14 +77,4 @@ class ConductorService:
         self.db.refresh(conductor_db)
         return conductor_db
 
-    def eliminar_conductor(self, id: int) -> bool:
-        conductor_db = self.db.execute(
-            select(Conductor).where(Conductor.id == id)
-        ).scalar_one_or_none()
-
-        if not conductor_db:
-            return False
-
-        self.db.delete(conductor_db)
-        self.db.commit()
-        return True
+    

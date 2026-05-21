@@ -83,14 +83,4 @@ class TransportadoraService:
         self.db.refresh(transportadora_db)
         return transportadora_db
 
-    def eliminar_transportadora(self, id: int) -> bool:
-        transportadora_db = self.db.execute(
-            select(Transportadora).where(Transportadora.id == id)
-        ).scalar_one_or_none()
-
-        if not transportadora_db:
-            return False
-
-        self.db.delete(transportadora_db)
-        self.db.commit()
-        return True
+    

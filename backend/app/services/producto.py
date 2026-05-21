@@ -117,14 +117,4 @@ class ProductoService:
         self.db.refresh(producto_db)
         return producto_db
 
-    def eliminar_producto(self, id: int) -> bool:
-        producto_db = self.db.execute(
-            select(Producto).where(Producto.id == id)
-        ).scalar_one_or_none()
-
-        if not producto_db:
-            return False
-
-        self.db.delete(producto_db)
-        self.db.commit()
-        return True
+    

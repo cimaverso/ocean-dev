@@ -38,7 +38,3 @@ def actualizar_transportadora(id: int, transportadora: TransportadoraUpdate, db:
         raise HTTPException(status_code=404, detail="Transportadora no encontrada")
     return {"message": "Transportadora actualizada exitosamente."}
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_transportadora(id: int, db: Session = Depends(get_db), usuario: dict = Depends(verificar_rol(['ADMINISTRADOR']))):
-    if not TransportadoraService(db).eliminar_transportadora(id):
-        raise HTTPException(status_code=404, detail="Transportadora no encontrada")
