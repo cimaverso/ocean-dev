@@ -22,15 +22,13 @@ class VehiculoController(Controller):
         output = VehiculoService(db).exportar_vehiculos(consulta)
         if output.getbuffer().nbytes == 0:
             raise HTTPException(status_code=404, detail="No hay datos para exportar.")
-        return Response(
-            content=output.read(),
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=vehiculos.xlsx"},
-        )
+        return Response(content=output.read(),
+                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": "attachment; filename=vehiculos.xlsx"})
 
     @get("/")
     def obtener_vehiculos(self, db: Session) -> list[VehiculoResponse]:
-        return VehiculoService(db).obtener_vehiculos()
+        return [VehiculoResponse.model_validate(v) for v in VehiculoService(db).obtener_vehiculos()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_vehiculo(self, data: VehiculoCreate, db: Session) -> dict:

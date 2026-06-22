@@ -9,12 +9,10 @@ from src.features.auth.schemas import (
     TokenResponse, RefreshTokenRequest,
     UsuarioCreate, UsuarioUpdate, UsuarioResponse,
 )
-from src.features.auth.services import UsuarioService
+from src.features.auth.services import UsuarioService, usuario_autenticado
 from src.core.security import crear_tokens, refrescar_token, guard_autenticado, guard_rol
-from src.features.auth.services import usuario_autenticado
 
 
-# Litestar no usa OAuth2PasswordRequestForm — recibimos usuario/clave en un schema simple
 @dataclass
 class LoginRequest:
     username: str
@@ -42,11 +40,11 @@ class UsuarioController(Controller):
     path = "/usuario"
     tags = ["Usuario"]
     dependencies = {"db": Provide(get_db)}
-    guards = [guard_autenticado]  # todos los endpoints requieren token
+    guards = [guard_autenticado]
 
     @get("/")
     def listar_usuarios(self, db: Session) -> list[UsuarioResponse]:
-        return UsuarioService(db).listar_usuarios()
+        return [UsuarioResponse.model_validate(u) for u in UsuarioService(db).listar_usuarios()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_usuario(self, data: UsuarioCreate, db: Session) -> dict:

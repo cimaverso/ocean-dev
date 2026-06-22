@@ -22,15 +22,13 @@ class ConductorController(Controller):
         output = ConductorService(db).exportar_conductores(consulta)
         if output.getbuffer().nbytes == 0:
             raise HTTPException(status_code=404, detail="No hay datos para exportar")
-        return Response(
-            content=output.read(),
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=conductores.xlsx"},
-        )
+        return Response(content=output.read(),
+                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": "attachment; filename=conductores.xlsx"})
 
     @get("/")
     def listar_conductores(self, db: Session) -> list[ConductorResponse]:
-        return ConductorService(db).listar_conductores()
+        return [ConductorResponse.model_validate(c) for c in ConductorService(db).listar_conductores()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_conductor(self, data: ConductorCreate, db: Session) -> dict:

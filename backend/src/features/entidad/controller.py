@@ -31,7 +31,7 @@ class EntidadController(Controller):
 
     @get("/{tipo:int}")
     def listar_entidades(self, tipo: int, db: Session) -> list[EntidadResponse]:
-        return EntidadService(db).listar_entidad(tipo)
+        return [EntidadResponse.model_validate(e) for e in EntidadService(db).listar_entidad(tipo)]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_entidad(self, data: EntidadCreate, db: Session) -> dict:

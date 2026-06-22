@@ -28,7 +28,7 @@ class DestinoController(Controller):
 
     @get("/")
     def listar_destinos(self, db: Session) -> list[DestinoResponse]:
-        return DestinoService(db).listar_destinos()
+        return [DestinoResponse.model_validate(d) for d in DestinoService(db).listar_destinos()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_destino(self, data: DestinoCreate, db: Session) -> dict:

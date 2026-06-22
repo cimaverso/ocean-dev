@@ -22,15 +22,13 @@ class TrailerController(Controller):
         output = TrailerService(db).exportar_trailers(consulta)
         if output.getbuffer().nbytes == 0:
             raise HTTPException(status_code=404, detail="No hay datos para exportar")
-        return Response(
-            content=output.read(),
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=trailers.xlsx"},
-        )
+        return Response(content=output.read(),
+                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": "attachment; filename=trailers.xlsx"})
 
     @get("/")
     def obtener_trailers(self, db: Session) -> list[TrailerResponse]:
-        return TrailerService(db).obtener_trailers()
+        return [TrailerResponse.model_validate(t) for t in TrailerService(db).obtener_trailers()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_trailer(self, data: TrailerCreate, db: Session) -> dict:

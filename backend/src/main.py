@@ -1,6 +1,7 @@
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
 from litestar.openapi import OpenAPIConfig
+from litestar.openapi.spec import Components, SecurityScheme
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -70,5 +71,18 @@ app = Litestar(
     ],
     cors_config=cors_config,
     on_startup=[on_startup],
-    openapi_config=OpenAPIConfig(title="API Sistema Ocean", version="3.0.0"),
+    openapi_config=OpenAPIConfig(
+        title="API Sistema Ocean",
+        version="3.0.0",
+        components=Components(
+            security_schemes={
+                "BearerToken": SecurityScheme(
+                    type="http",
+                    scheme="bearer",
+                    bearer_format="JWT",
+                )
+            }
+        ),
+        security=[{"BearerToken": []}],
+    ),
 )

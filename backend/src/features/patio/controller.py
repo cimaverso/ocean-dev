@@ -28,7 +28,7 @@ class PatioController(Controller):
 
     @get("/")
     def listar_patios(self, db: Session) -> list[PatioResponse]:
-        return PatioService(db).listar_patios()
+        return [PatioResponse.model_validate(p) for p in PatioService(db).listar_patios()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_patio(self, data: PatioCreate, db: Session) -> dict:

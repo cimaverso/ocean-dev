@@ -28,7 +28,7 @@ class TransportadoraController(Controller):
 
     @get("/")
     def listar_transportadoras(self, db: Session) -> list[TransportadoraResponse]:
-        return TransportadoraService(db).obtener_transportadoras()
+        return [TransportadoraResponse.model_validate(t) for t in TransportadoraService(db).obtener_transportadoras()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_transportadora(self, data: TransportadoraCreate, db: Session) -> dict:

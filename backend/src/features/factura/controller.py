@@ -28,7 +28,7 @@ class FacturaController(Controller):
 
     @get("/")
     def listar_facturas(self, db: Session) -> list[FacturaResponse]:
-        return FacturaService(db).listar_facturas()
+        return [FacturaResponse.model_validate(f) for f in FacturaService(db).listar_facturas()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_factura(self, data: FacturaCreate, db: Session) -> dict:

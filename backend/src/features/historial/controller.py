@@ -30,4 +30,4 @@ class HistorialController(Controller):
 
     @get("/")
     def listar_historial(self, db: Session) -> list[HistorialResponse]:
-        return HistorialService(db).listar_historial()
+        return [HistorialResponse.model_validate(h) for h in HistorialService(db).listar_historial()]

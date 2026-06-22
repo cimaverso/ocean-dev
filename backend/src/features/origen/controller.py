@@ -28,7 +28,7 @@ class OrigenController(Controller):
 
     @get("/")
     def listar_origenes(self, db: Session) -> list[OrigenResponse]:
-        return OrigenService(db).listar_origenes()
+        return [OrigenResponse.model_validate(o) for o in OrigenService(db).listar_origenes()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_origen(self, data: OrigenCreate, db: Session) -> dict:

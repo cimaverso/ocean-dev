@@ -31,11 +31,11 @@ class ProductoController(Controller):
 
     @get("/proceso", include_in_schema=False)
     def listar_procesos(self, db: Session) -> list[ProcesoProductoResponse]:
-        return ProductoService(db).listar_procesos()
+        return [ProcesoProductoResponse.model_validate(p) for p in ProductoService(db).listar_procesos()]
 
     @get("/{tipo:int}")
     def listar_productos_tipo(self, tipo: int, db: Session) -> list[ProductoResponse]:
-        return ProductoService(db).listar_productos_tipo(tipo)
+        return [ProductoResponse.model_validate(p) for p in ProductoService(db).listar_productos_tipo(tipo)]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_producto(self, data: ProductoCreate, db: Session) -> dict:

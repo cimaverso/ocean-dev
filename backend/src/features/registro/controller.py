@@ -67,8 +67,8 @@ class RegistroController(Controller):
     def obtener_registros(self, db: Session, estado: Optional[int] = None,
                           tipo: Optional[int] = None, fecha_inicio: Optional[date] = None,
                           fecha_fin: Optional[date] = None) -> list[RegistroResponse]:
-        return RegistroService(db).obtener_registros(estado=estado, tipo=tipo,
-                                                      fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
+        return [RegistroResponse.model_validate(r) for r in RegistroService(db).obtener_registros(
+            estado=estado, tipo=tipo, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)]
 
     @post("/", status_code=201)
     def crear_registro(self, data: RegistroCreate, db: Session, request: Request) -> dict:

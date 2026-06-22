@@ -28,7 +28,7 @@ class MedidaController(Controller):
 
     @get("/")
     def listar_medidas(self, db: Session) -> list[UnidadMedidaResponse]:
-        return UnidadMedidaService(db).listar_medidas()
+        return [UnidadMedidaResponse.model_validate(m) for m in UnidadMedidaService(db).listar_medidas()]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_medida(self, data: UnidadMedidaCreate, db: Session) -> dict:

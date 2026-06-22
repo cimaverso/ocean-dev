@@ -27,10 +27,10 @@ class CompradorController(Controller):
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": "attachment; filename=compradores.xlsx"},
         )
-
     @get("/")
     def listar_compradores(self, db: Session) -> list[CompradorResponse]:
-        return CompradorService(db).listar_compradores()
+        resultados = CompradorService(db).listar_compradores()
+        return [CompradorResponse.model_validate(c) for c in resultados]
 
     @post("/", status_code=201, guards=[guard_rol(["ADMINISTRADOR"])])
     def crear_comprador(self, data: CompradorCreate, db: Session) -> dict:
